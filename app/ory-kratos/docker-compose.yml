@@ -1,0 +1,71 @@
+services:
+  kratos-migrate:
+    image: oryd/kratos:v1.3.0
+    volumes:
+      - ./config:/etc/config/kratos
+      - type: volume
+        source: sqlite
+        target: /var/lib/sqlite
+    restart: no
+    command: -c /etc/config/kratos/kratos.yaml migrate sql -e --yes
+
+
+  kratos:
+    image: oryd/kratos:v1.3.0
+    # The following can also be used for simple setup without DB
+    # environment:
+    #   DSN: memory
+    volumes:
+      - ./config:/etc/config/kratos
+      - type: volume
+        source: sqlite
+        target: /var/lib/sqlite
+    # --watch-courier needs to be declare here instead of the yaml, as yaml doesn't register it properly
+    command: -c /etc/config/kratos/kratos.yaml serve --watch-courier
+    depends_on:
+      - kratos-migrate
+    ports:
+      - 4433:4433
+      - 4434:4434
+    networks:
+      - intranet
+
+  kratos-ui:
+    image: oryd/kratos-selfservice-ui-node:v1.3.0
+    environment:
+      KRATOS_PUBLIC_URL: http://kratos:4433
+      KRATOS_BROWSER_URL: http://127.0.0.1:4433
+      COOKIE_SECRET: changeme
+      CSRF_COOKIE_NAME: kratos_csrf_ui
+      CSRF_COOKIE_SECRET: changeme
+    ports:
+      - 4455:3000
+    networks:
+      - intranet
+
+  kratos-admin-ui:
+    image: ghcr.io/dfoxg/kratos-admin-ui:v2.4.0
+    ports:
+      - 4456:8080
+    environment:
+      KRATOS_ADMIN_URL: http://kratos:4434
+      KRATOS_PUBLIC_URL: http://kratos:4433
+    networks:
+      - intranet
+
+  mock-mail:
+    image: axllent/mailpit:v1.21
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+    ports:
+      - 4566:8025
+      - 1025:1025
+    networks:
+      - intranet
+
+networks:
+  intranet:
+
+volumes:
+  sqlite:
