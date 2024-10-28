@@ -1,0 +1,34 @@
+services:
+  kratos:
+    image: oryd/kratos:v1.3.0
+    environment:
+      DSN: memory
+    volumes:
+      - ./docker/config:/etc/config/kratos
+      - type: volume
+        source: sqlite
+        target: /var/lib/sqlite
+    # --watch-courier needs to be declare here instead of the yaml, as yaml doesn't register it properly
+    command: -c /etc/config/kratos/kratos.yaml serve --watch-courier
+    ports:
+      - 4433:4433
+      - 4434:4434
+    networks:
+      - intranet
+
+  mock-mail:
+    image: axllent/mailpit:v1.21
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+    ports:
+      - 4566:8025
+      - 1025:1025
+    networks:
+      - intranet
+
+networks:
+  intranet:
+
+volumes:
+  sqlite:
