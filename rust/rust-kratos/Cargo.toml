@@ -4,4 +4,12 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-ory-kratos-client = "1.1.0"
+anyhow = "1.0.91"
+clap = { version = "4.5.20", features = ["derive"] }
+# crate version seems to be outdated, so we use directly from git
+# TODO Using fork because of autogenerator issue: https://github.com/ory/sdk/issues/381
+ory-client = { git = "https://github.com/gogetgoing/client-rust", branch = "master" }
+reqwest = "0.12.8"
+serde = { version = "1.0.213", features = ["serde_derive"] }
+serde_json = "1.0.132"
+tokio = { version = "1.41.0", features = ["full"] }
