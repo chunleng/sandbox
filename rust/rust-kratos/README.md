@@ -5,12 +5,7 @@ have created on `/app/ory-kratos`
 
 ## Status
 
-WIP
-
-## Problems faced
-
-- It seems like verification will redirect to browser and I cannot get it to
-  work in CLI because the redirection will happen.
+Working
 
 ## Getting Started
 

@@ -16,19 +16,6 @@ services:
     networks:
       - intranet
 
-  kratos-ui:
-    image: oryd/kratos-selfservice-ui-node:v1.3.0
-    environment:
-      KRATOS_PUBLIC_URL: http://kratos:4433
-      KRATOS_BROWSER_URL: http://127.0.0.1:4433
-      COOKIE_SECRET: changeme
-      CSRF_COOKIE_NAME: kratos_csrf_ui
-      CSRF_COOKIE_SECRET: changeme
-    ports:
-      - 4455:3000
-    networks:
-      - intranet
-
   mock-mail:
     image: axllent/mailpit:v1.21
     environment:

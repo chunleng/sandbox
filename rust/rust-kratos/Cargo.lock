@@ -229,6 +229,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "773648b94d0e5d620f64f280777445740e61fe701025087ec8b57f45c791888b"
 
 [[package]]
+name = "custom_error"
+version = "1.9.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4f8a51dd197fa6ba5b4dc98a990a43cc13693c23eb0089ebb0fcc1f04152bca6"
+
+[[package]]
 name = "darling"
 version = "0.20.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -640,6 +646,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "lazy_static"
+version = "1.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bbd2bcb4c963f2ddae06a2efc7e9f3591312473c50c6685e1f298068316e66fe"
+
+[[package]]
 name = "libc"
 version = "0.2.161"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -804,7 +816,7 @@ dependencies = [
 [[package]]
 name = "ory-client"
 version = "1.15.7"
-source = "git+https://github.com/gogetgoing/client-rust?branch=master#c6a04c261ffeece30c024a4cb2f4e96cbc400a83"
+source = "git+https://github.com/gogetgoing/client-rust?branch=master#6c916a0726aa855bdd6b5320dc277d803154bb91"
 dependencies = [
  "reqwest",
  "serde",
@@ -959,6 +971,8 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "clap",
+ "custom_error",
+ "lazy_static",
  "ory-client",
  "reqwest",
  "serde",

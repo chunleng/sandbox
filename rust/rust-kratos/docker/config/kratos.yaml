@@ -1,7 +1,7 @@
 # This is the minumum to get Kratos running
 # ref: https://github.com/ory/kratos/blob/master/contrib/quickstart/kratos/email-password/kratos.yml
 
-version: v0.13.0
+version: v1.3.0
 
 dsn: memory
 
@@ -61,7 +61,6 @@ log:
 courier:
   smtp:
     connection_uri: smtp://mock-mail:1025/?disable_starttls=true
-
 
 identity:
   default_schema_id: default
