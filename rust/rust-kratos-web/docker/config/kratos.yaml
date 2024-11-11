@@ -1,0 +1,69 @@
+# This is the minumum to get Kratos running
+# ref: https://github.com/ory/kratos/blob/master/contrib/quickstart/kratos/email-password/kratos.yml
+
+version: v1.3.0
+
+dsn: memory
+
+serve:
+  public:
+    base_url: http://127.0.0.1:4433/
+    cors:
+      enabled: false
+  admin:
+    base_url: http://127.0.0.1:4434/
+
+selfservice:
+  default_browser_return_url: http://127.0.0.1:4455/welcome
+  allowed_return_urls:
+    - http://127.0.0.1:4455
+
+  methods:
+    password:
+      enabled: true
+    code:
+      enabled: true
+
+  flows:
+    error:
+      ui_url: http://127.0.0.1:4455/error
+
+    login:
+      ui_url: http://127.0.0.1:4455/login
+      lifespan: 10m
+      after:
+        hooks:
+          - hook: require_verified_address
+
+    verification:
+      enabled: true
+      ui_url: http://127.0.0.1:4455/verification
+      use: code
+      after:
+        default_browser_return_url: http://127.0.0.1:4455/welcome
+
+    registration:
+      lifespan: 10m
+      ui_url: http://127.0.0.1:4455/registration
+      after:
+        password:
+          hooks:
+            # Following is another common hook, where we login the user straight after registration.
+            # However, note that this conflicts with `require_verified_address` of login flow
+            # - hook: session
+            - hook: show_verification_ui
+
+log:
+  level: trace
+  format: text
+  leak_sensitive_values: true
+
+courier:
+  smtp:
+    connection_uri: smtp://mock-mail:1025/?disable_starttls=true
+
+identity:
+  default_schema_id: default
+  schemas:
+    - id: default
+      url: file:///etc/config/kratos/identity.schema.json
