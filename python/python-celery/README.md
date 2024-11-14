@@ -12,6 +12,9 @@ WIP
 # Setup RabbitMQ
 docker-compose up
 
-# TODO run scripts
-python main.py
+# Setup worker
+celery -A src.tasks worker
+
+# Run scripts
+python request_simple.py
 ```
