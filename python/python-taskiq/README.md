@@ -17,4 +17,5 @@ taskiq worker src.broker:broker
 
 # Send some tasks
 python request_simple.py
+python request_multiple.py
 ```
