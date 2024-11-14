@@ -25,3 +25,18 @@ def reject_random():
     print(f"random_number generated: {i}")
     if i < 8:
         raise Reject()
+
+
+class NotifyTask(Task):
+    def on_success(self, retval, task_id, args, kwargs):
+        print(f"Success: {retval=} {task_id=} {args=} {kwargs=}")
+    def on_failure(self, exc, task_id, args, kwargs, einfo):
+        print(f"Fail: {exc=} {task_id=} {args=} {kwargs=}, {einfo}")
+
+@app.task(base=NotifyTask)
+def success() -> str:
+    return "Yay!"
+
+@app.task(base=NotifyTask)
+def failure():
+    raise Exception("Boo!")

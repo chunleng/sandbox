@@ -19,4 +19,5 @@ celery -A src.tasks worker
 python request_simple.py
 python request_multiple.py
 python request_random_reject.py
+python request_notify.py
 ```
