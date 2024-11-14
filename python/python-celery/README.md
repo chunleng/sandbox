@@ -17,4 +17,5 @@ celery -A src.tasks worker
 
 # Run scripts
 python request_simple.py
+python request_multiple.py
 ```
