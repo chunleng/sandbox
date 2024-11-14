@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "python-celery"
+version = "0.1.0"
+description = ""
+authors = ["ChunLeng Lim <chunleng.lim@woven-planet.global>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+celery = "^5.4.0"
+
+[tool.poetry.group.dev.dependencies]
+pyright = "^1.1.389"
+isort = "^5.13.2"
+black = "^24.10.0"
+celery-types = "^0.22.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
