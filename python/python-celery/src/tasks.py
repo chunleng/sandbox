@@ -1,6 +1,7 @@
-from celery import Celery
-from celery.exceptions import SoftTimeLimitExceeded
+from celery import Celery, Task
+from celery.exceptions import SoftTimeLimitExceeded, Reject
 from time import sleep
+import random
 
 app = Celery('tasks', broker='pyamqp://admin:password@localhost:5672//')
 
@@ -17,3 +18,10 @@ def long(job_id: int):
     except SoftTimeLimitExceeded:
         print("Cleanup")
     print(f"Job ended: {job_id}")
+
+@app.task(autoretry_for=(Reject,), max_retries=None, retry_backoff=True, retry_jitter=True)
+def reject_random():
+    i = random.randint(0, 10)
+    print(f"random_number generated: {i}")
+    if i < 8:
+        raise Reject()
