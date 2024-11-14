@@ -4,7 +4,7 @@ Test out the function of python library [TaskIQ](https://github.com/taskiq-pytho
 
 ## Status
 
-WIP
+Working
 
 ## Getting Started
 
@@ -12,6 +12,9 @@ WIP
 # Setup RabbitMQ
 docker-compose up
 
-# TODO Scripts
-python main.py
+# Startup worker
+taskiq worker src.broker:broker
+
+# Send some tasks
+python request_simple.py
 ```
