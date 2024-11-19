@@ -3,7 +3,7 @@ from celery.exceptions import SoftTimeLimitExceeded, Reject
 from time import sleep
 import random
 
-app = Celery('tasks', broker='pyamqp://admin:password@localhost:5672//')
+app = Celery(broker='pyamqp://admin:password@localhost:5672//')
 
 @app.task
 def hello_world():
