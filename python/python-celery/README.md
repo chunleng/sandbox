@@ -15,6 +15,9 @@ docker-compose up
 # Setup worker
 celery -A src.tasks worker
 
+# Setup schedule
+celery -A src.schedules beat
+
 # Run scripts
 python request_simple.py
 python request_multiple.py

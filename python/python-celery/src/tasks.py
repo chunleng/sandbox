@@ -1,3 +1,4 @@
+import datetime
 from celery import Celery, Task
 from celery.exceptions import SoftTimeLimitExceeded, Reject
 from time import sleep
@@ -25,6 +26,10 @@ def reject_random():
     print(f"random_number generated: {i}")
     if i < 8:
         raise Reject()
+
+@app.task
+def check_job(job_id: str):
+    print(f"{job_id=} started at {datetime.datetime.now()}")
 
 
 class NotifyTask(Task):
