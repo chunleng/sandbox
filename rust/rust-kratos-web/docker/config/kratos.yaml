@@ -9,14 +9,29 @@ serve:
   public:
     base_url: http://127.0.0.1:4433/
     cors:
-      enabled: false
+      enabled: true
+      allowed_origins:
+        - http://127.0.0.1:8080
+      allowed_methods:
+        - POST
+        - GET
+        - PUT
+        - PATCH
+        - DELETE
+      allowed_headers:
+        - Authorization
+        - Cookie
+        - Content-Type
+      exposed_headers:
+        - Content-Type
+        - Set-Cookie
   admin:
     base_url: http://127.0.0.1:4434/
 
 selfservice:
-  default_browser_return_url: http://127.0.0.1:4455/welcome
+  default_browser_return_url: http://127.0.0.1:8080/
   allowed_return_urls:
-    - http://127.0.0.1:4455
+    - http://127.0.0.1:8080/
 
   methods:
     password:
@@ -26,10 +41,10 @@ selfservice:
 
   flows:
     error:
-      ui_url: http://127.0.0.1:4455/error
+      ui_url: http://127.0.0.1:8080/error
 
     login:
-      ui_url: http://127.0.0.1:4455/login
+      ui_url: http://127.0.0.1:8080/
       lifespan: 10m
       after:
         hooks:
@@ -37,14 +52,14 @@ selfservice:
 
     verification:
       enabled: true
-      ui_url: http://127.0.0.1:4455/verification
+      ui_url: http://127.0.0.1:8080/verify
       use: code
       after:
-        default_browser_return_url: http://127.0.0.1:4455/welcome
+        default_browser_return_url: http://127.0.0.1:8080/
 
     registration:
       lifespan: 10m
-      ui_url: http://127.0.0.1:4455/registration
+      ui_url: http://127.0.0.1:8080/register
       after:
         password:
           hooks:
