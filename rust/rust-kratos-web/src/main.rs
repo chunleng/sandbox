@@ -1,12 +1,16 @@
 use actions::kratos::register::{
     get_registration_flow, register, GetRegisterFlowError, RegisterError,
 };
+use actions::kratos::verify::{get_verify_flow, verify, GetVerifyFlowError, VerifyError};
+use config::API_BASE_URL;
 use leptos::{
     component, create_action, create_effect, create_node_ref, create_signal, ev::SubmitEvent,
     html::Input, mount_to_body, view, window, IntoView, NodeRef, SignalGet, SignalSet, View,
 };
 use leptos_router::{use_navigate, use_query_map, Outlet, Route, Router, Routes};
-use ory_client::models::{ui_node_attributes::UiNodeAttributes, RegistrationFlow};
+use ory_client::models::{
+    ui_node_attributes::UiNodeAttributes, ui_text::TypeEnum, RegistrationFlow, VerificationFlow,
+};
 
 mod actions;
 mod config;
@@ -20,6 +24,7 @@ fn main() {
                         <Route path="" view=KratosPage>
                             <Route path="" view=LoginForm />
                             <Route path="register" view=RegistrationForm />
+                            <Route path="resend" view=ResendVerificationForm />
                             <Route path="verify" view=VerificationForm />
                             <Route path="err" view=ErrorPage />
                         </Route>
@@ -39,7 +44,7 @@ fn KratosPage() -> impl IntoView {
                 " "
                 <a href="/register">Register</a>
                 " "
-                <a href="/verify">Verify</a>
+                <a href="/verify">Resend Verification</a>
             </div>
             <Outlet />
         </div>
@@ -61,19 +66,281 @@ fn LoginForm() -> impl IntoView {
 }
 
 #[component]
+fn ResendVerificationForm() -> impl IntoView {
+    let query = use_query_map();
+    let (flow, set_flow) = create_signal(None::<VerificationFlow>);
+    let (message, set_message) = create_signal(None::<String>);
+    let email_el: NodeRef<Input> = create_node_ref();
+    let get_verification_flow = create_action(|flow_id: &String| get_verify_flow(flow_id.clone()));
+    let resend = create_action(|args: &(String, VerificationFlow)| {
+        let (email, flow) = args.clone();
+        verify(Some(email.clone()), None, flow)
+    });
+
+    create_effect(move |_| {
+        let query = query.get();
+        match query.get("flow") {
+            None => {
+                if window()
+                    .location()
+                    .set_href(&format!(
+                        "{}/self-service/verification/browser",
+                        *API_BASE_URL
+                    ))
+                    .is_err()
+                {
+                    use_navigate()("/error", Default::default());
+                }
+                use_navigate()("/resend", Default::default());
+                return;
+            }
+            Some(flow_id) => {
+                get_verification_flow.dispatch(flow_id.to_string());
+            }
+        }
+    });
+
+    create_effect(move |_| {
+        if let Some(x) = get_verification_flow.value().get() {
+            match x {
+                Ok(x) => {
+                    set_flow.set(Some(x));
+                }
+                Err(x) => match x {
+                    GetVerifyFlowError::Gone410 => {
+                        use_navigate()("/resend", Default::default());
+                    }
+                    GetVerifyFlowError::Unknown => {
+                        use_navigate()("/error", Default::default());
+                    }
+                },
+            }
+        }
+    });
+
+    create_effect(move |_| {
+        if let Some(f) = flow.get() {
+            set_message.set(None);
+            if f.state == Some("passed_challenge".into()) {
+                use_navigate()("/", Default::default());
+                return;
+            } else if f.state == Some("sent_email".into()) {
+                use_navigate()(&format!("/verify?flow={}", f.id), Default::default());
+                return;
+            }
+
+            if let Some(e) = f.ui.messages.as_ref() {
+                if let Some(e) = e.last() {
+                    if e.r#type == TypeEnum::Error {
+                        set_message.set(Some(e.text.to_string()));
+                        return;
+                    }
+                }
+            }
+        }
+    });
+
+    create_effect(move |_| {
+        if let Some(x) = resend.value().get() {
+            match x {
+                Ok(_) => match flow.get() {
+                    Some(f) => {
+                        resend.value().set(None);
+                        get_verification_flow.dispatch(f.id);
+                    }
+                    None => {
+                        use_navigate()("/error", Default::default());
+                    }
+                },
+                Err(e) => match e {
+                    VerifyError::Gone410 => {
+                        use_navigate()("/resend", Default::default());
+                    }
+                    VerifyError::BadRequest400 => match flow.get() {
+                        Some(f) => {
+                            resend.value().set(None);
+                            get_verification_flow.dispatch(f.id);
+                        }
+                        None => {
+                            use_navigate()("/error", Default::default());
+                        }
+                    },
+                    VerifyError::Unknown => {
+                        use_navigate()("/error", Default::default());
+                    }
+                },
+            }
+        }
+    });
+
+    view! {
+        {move || match flow.get() {
+            None => view! {}.into_view(),
+            Some(f) => {
+                view! {
+                    <>
+                        <h1>Resend Verification Email</h1>
+                        <form on:submit=move |e: SubmitEvent| {
+                            e.prevent_default();
+                            resend.dispatch((email_el.get().unwrap().value(), f.clone()));
+                        }>
+                            <div>
+                                "Email "<input type="text" node_ref=email_el />" "
+                                <button>Send</button>
+                            </div>
+                        </form>
+                        {match message.get() {
+                            Some(x) => view! { <div>"Message: " {x}</div> }.into_view(),
+                            None => view! {}.into_view(),
+                        }}
+                    </>
+                }
+                    .into_view()
+            }
+        }}
+    }
+}
+
+#[component]
 fn VerificationForm() -> impl IntoView {
+    let query = use_query_map();
+    let code_el: NodeRef<Input> = create_node_ref();
+    let (flow, set_flow) = create_signal(None::<VerificationFlow>);
+    let (message, set_message) = create_signal(None::<String>);
+    let get_verification_flow = create_action(|flow_id: &String| get_verify_flow(flow_id.clone()));
+    let verify = create_action(|args: &(String, VerificationFlow)| {
+        let (code, flow) = args.clone();
+        verify(None, Some(code.clone()), flow)
+    });
+
+    create_effect(move |_| {
+        let query = query.get();
+        match query.get("flow") {
+            None => {
+                use_navigate()("/resend", Default::default());
+                return;
+            }
+            Some(flow_id) => {
+                get_verification_flow.dispatch(flow_id.to_string());
+            }
+        }
+    });
+
+    create_effect(move |_| {
+        if let Some(x) = get_verification_flow.value().get() {
+            match x {
+                Ok(x) => {
+                    set_flow.set(Some(x));
+                }
+                Err(x) => match x {
+                    GetVerifyFlowError::Gone410 => {
+                        use_navigate()("/resend", Default::default());
+                    }
+                    GetVerifyFlowError::Unknown => {
+                        use_navigate()("/error", Default::default());
+                    }
+                },
+            }
+        }
+    });
+
+    create_effect(move |_| {
+        if let Some(f) = flow.get() {
+            set_message.set(None);
+            if f.state == Some("passed_challenge".into()) {
+                use_navigate()("/", Default::default());
+                return;
+            } else if f.state == Some("choose_method".into()) {
+                use_navigate()(&format!("/resend?flow={}", f.id), Default::default());
+                return;
+            }
+
+            let last_message = f.ui.messages.as_ref().unwrap().last();
+            if let Some(e) = last_message {
+                if e.r#type == TypeEnum::Error {
+                    set_message.set(Some(e.text.to_string()));
+                    return;
+                }
+            }
+
+            let code =
+                f.ui.nodes
+                    .iter()
+                    .filter_map(|x| match x.attributes.as_ref() {
+                        UiNodeAttributes::Input(x) => {
+                            if x.name == "code" && x.value.is_some() {
+                                return Some(
+                                    x.value
+                                        .clone()
+                                        .unwrap()
+                                        .unwrap()
+                                        .as_str()
+                                        .unwrap()
+                                        .to_string(),
+                                );
+                            }
+                            None
+                        }
+                        _ => None,
+                    })
+                    .last();
+            if let Some(c) = code {
+                verify.dispatch((c, f));
+            }
+        }
+    });
+
+    create_effect(move |_| {
+        if let Some(x) = verify.value().get() {
+            match x {
+                Ok(_) => match flow.get() {
+                    Some(f) => {
+                        verify.value().set(None);
+                        get_verification_flow.dispatch(f.id);
+                    }
+                    None => {
+                        use_navigate()("/error", Default::default());
+                    }
+                },
+                Err(e) => match e {
+                    VerifyError::Gone410 => {
+                        use_navigate()("/resend", Default::default());
+                    }
+                    VerifyError::BadRequest400 => match flow.get() {
+                        Some(f) => {
+                            verify.value().set(None);
+                            get_verification_flow.dispatch(f.id);
+                        }
+                        None => {
+                            use_navigate()("/error", Default::default());
+                        }
+                    },
+                    VerifyError::Unknown => {
+                        use_navigate()("/error", Default::default());
+                    }
+                },
+            }
+        }
+    });
+
     view! {
         <div>
             <h1>Verify</h1>
-            <form action="">
-                <div>Email " "<input type="text" /></div>
-                <button>Send Verification Email</button>
+            <form on:submit=move |e: SubmitEvent| {
+                e.prevent_default();
+                let f = flow.get().unwrap();
+                verify.dispatch((code_el.get().unwrap().value(), f));
+            }>
+                <div>Code " "<input type="text" node_ref=code_el />" "<button>Verify</button></div>
+                <div>
+                    If you are unsure of the code, click " "<a href="/resend">here</a>" "
+                    to request for another email
+                </div>
             </form>
-            <br />
-            <form action="">
-                <div>Code " "<input type="text" /></div>
-                <button>Verify</button>
-            </form>
+            {move || match message.get() {
+                Some(x) => view! { <div>"Message: " {x}</div> }.into_view(),
+                None => view! {}.into_view(),
+            }}
         </div>
     }
 }
