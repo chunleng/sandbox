@@ -348,50 +348,113 @@ fn VerificationForm() -> impl IntoView {
 #[component]
 fn RegistrationForm() -> impl IntoView {
     let query = use_query_map();
-    let navigate = use_navigate();
     let (flow, set_flow) = create_signal(None::<RegistrationFlow>);
+    let (message, set_message) = create_signal(None::<View>);
     let get_registration_flow =
         create_action(|flow_id: &String| get_registration_flow(flow_id.clone()));
-    let register = create_action(|args: &(String, String, String, String)| {
-        let (email, password, flow_id, csrf_token) = args.clone();
-        register(
-            email.clone(),
-            password.clone(),
-            flow_id.clone(),
-            csrf_token.clone(),
-        )
+    let register = create_action(|args: &(String, String, RegistrationFlow)| {
+        let (email, password, f) = args.clone();
+        register(email.clone(), password.clone(), f)
     });
     let email_el: NodeRef<Input> = create_node_ref();
     let password_el: NodeRef<Input> = create_node_ref();
 
-    create_effect(move |_| {
-        let query = query.get();
-        match query.get("flow") {
-            None => {
-                if window()
-                    .location()
-                    .set_href("http://127.0.0.1:4433/self-service/registration/browser")
-                    .is_err()
-                {
-                    navigate("/error", Default::default());
-                }
+    create_effect(move |_| match query.get().get("flow") {
+        None => {
+            if window()
+                .location()
+                .set_href(&format!(
+                    "{}/self-service/registration/browser",
+                    *API_BASE_URL
+                ))
+                .is_err()
+            {
+                use_navigate()("/error", Default::default());
             }
-            Some(flow_id) => match get_registration_flow.value().get() {
-                Some(Ok(f)) => {
-                    set_flow.set(Some(f));
-                }
-                Some(Err(e)) => match e {
+        }
+        Some(flow_id) => {
+            get_registration_flow.dispatch(flow_id.to_string());
+        }
+    });
+
+    create_effect(move |_| {
+        if let Some(x) = get_registration_flow.value().get() {
+            match x {
+                Ok(f) => set_flow.set(Some(f)),
+                Err(x) => match x {
                     GetRegisterFlowError::Gone410 => {
-                        navigate("/register", Default::default());
+                        use_navigate()("/resend", Default::default());
                     }
                     GetRegisterFlowError::Unknown => {
-                        navigate("/error", Default::default());
+                        use_navigate()("/error", Default::default());
                     }
                 },
-                _ => {
-                    get_registration_flow.dispatch(flow_id.to_string());
+            }
+        }
+    });
+
+    create_effect(move |_| {
+        if let Some(f) = flow.get() {
+            set_message.set(None);
+            let mut messages: Vec<String> =
+                f.ui.nodes
+                    .iter()
+                    .flat_map(|x| x.messages.iter().map(|x| x.text.clone()))
+                    .collect();
+            if messages.len() == 0 {
+                messages =
+                    f.ui.messages
+                        .iter()
+                        .flat_map(|x| x.iter().map(|x| x.text.clone()))
+                        .collect();
+            }
+            set_message.set(Some(
+                view! {
+                    <ul>
+                        {messages
+                            .iter()
+                            .map(|x| { view! { <li>{x}</li> }.into_view() })
+                            .collect::<View>()}
+                    </ul>
                 }
-            },
+                .into_view(),
+            ));
+        }
+    });
+
+    create_effect(move |_| {
+        if let Some(x) = register.value().get() {
+            match x {
+                Ok(_) => {
+                    set_message.set(Some(
+                        view! {
+                            <div>
+                                "Registration Successful, Click "<a href="/register">here</a>
+                                " to register another user"
+                            </div>
+                        }
+                        .into_view(),
+                    ));
+                    register.value().set(None);
+                }
+                Err(e) => match e {
+                    RegisterError::Gone410 => {
+                        use_navigate()("/register", Default::default());
+                    }
+                    RegisterError::BadRequest400 => match flow.get() {
+                        Some(f) => {
+                            register.value().set(None);
+                            get_registration_flow.dispatch(f.id);
+                        }
+                        None => {
+                            use_navigate()("/error", Default::default());
+                        }
+                    },
+                    RegisterError::Unknown => {
+                        use_navigate()("/error", Default::default());
+                    }
+                },
+            }
         }
     });
 
@@ -404,35 +467,11 @@ fn RegistrationForm() -> impl IntoView {
                         <h1>Register</h1>
                         <form on:submit=move |e: SubmitEvent| {
                             e.prevent_default();
-                            let csrf_token = f
-                                .ui
-                                .nodes
-                                .iter()
-                                .flat_map(|x| {
-                                    if let UiNodeAttributes::Input(y) = x.attributes.as_ref() {
-                                        if y.name == "csrf_token" {
-                                            return vec![
-                                                y
-                                                    .value
-                                                    .clone()
-                                                    .unwrap()
-                                                    .unwrap()
-                                                    .as_str()
-                                                    .unwrap()
-                                                    .to_string(),
-                                            ];
-                                        }
-                                    }
-                                    vec![]
-                                })
-                                .last()
-                                .unwrap();
                             register
                                 .dispatch((
                                     email_el.get().unwrap().value(),
                                     password_el.get().unwrap().value(),
-                                    f.id.to_string(),
-                                    csrf_token,
+                                    f.clone(),
                                 ));
                         }>
                             <div>
@@ -443,30 +482,9 @@ fn RegistrationForm() -> impl IntoView {
                                 Password " "
                                 <input type="password" name="password" node_ref=password_el />
                             </div>
-                            {match register.value().get() {
-                                Some(Ok(_)) => {
-                                    view! { <div>Registration done successfully!</div> }.into_view()
-                                }
-                                Some(Err(RegisterError::ValidationError { messages })) => {
-                                    view! {
-                                        <div>
-                                            <ul>
-                                                {messages
-                                                    .iter()
-                                                    .map(|x| { view! { <li>{x}</li> }.into_view() })
-                                                    .collect::<Vec<View>>()
-                                                    .into_view()}
-                                            </ul>
-                                        </div>
-                                    }
-                                        .into_view()
-                                }
-                                Some(Err(_)) => view! { <div>Error!</div> }.into_view(),
-                                None => view! {}.into_view(),
-                            }}
-                            <input type="hidden" name="method" value="password" />
                             <button>Register</button>
                         </form>
+                        {message}
                     </div>
                 }
                     .into_view()

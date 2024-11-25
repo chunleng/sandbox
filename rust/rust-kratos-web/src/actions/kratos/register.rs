@@ -1,4 +1,4 @@
-use ory_client::models::RegistrationFlow;
+use ory_client::models::{RegistrationFlow, ui_node_attributes::UiNodeAttributes};
 use reqwest::header::HeaderMap;
 use reqwest::StatusCode;
 
@@ -39,10 +39,11 @@ pub async fn get_registration_flow(
 
 #[derive(Debug, Clone)]
 pub enum RegisterError {
-    ValidationError { messages: Vec<String> },
+    Gone410,
+    BadRequest400,
     Unknown,
 }
-pub async fn register(email: String, password: String, flow_id: String, csrf_token: String) -> Result<(), RegisterError> {
+pub async fn register(email: String, password: String, flow: RegistrationFlow) -> Result<(), RegisterError> {
     let mut headers = HeaderMap::new();
     // This header is necessary so that we have a API response returned instead of a web page
     // headers.insert("Accept", "application/json".parse().unwrap());
@@ -51,10 +52,30 @@ pub async fn register(email: String, password: String, flow_id: String, csrf_tok
         .default_headers(headers)
         .build()
         .unwrap();
+    let csrf_token =
+        flow.ui.nodes
+            .iter()
+            .flat_map(|x| {
+                if let UiNodeAttributes::Input(y) = x.attributes.as_ref() {
+                    if y.name == "csrf_token" {
+                        return vec![y
+                            .value
+                            .clone()
+                            .unwrap()
+                            .unwrap()
+                            .as_str()
+                            .unwrap()
+                            .to_string()];
+                    }
+                }
+                vec![]
+            })
+            .last()
+            .unwrap();
     match client
         .post(format!(
             "{}/self-service/registration?flow={}",
-            *API_BASE_URL, flow_id
+            *API_BASE_URL, flow.id
         ))
         .body(json!({
             "csrf_token": csrf_token,
@@ -68,24 +89,8 @@ pub async fn register(email: String, password: String, flow_id: String, csrf_tok
     {
         Ok(res) => match res.status() {
             StatusCode::OK => Ok(()),
-            StatusCode::BAD_REQUEST => {
-                let r = get_registration_flow(flow_id.to_string()).await;
-                match r {
-                    Ok(flow) => {
-                        let mut messages: Vec<String> = flow
-                            .ui
-                            .nodes
-                            .iter()
-                            .flat_map(|x| x.messages.iter().map(|x| x.text.clone()))
-                            .collect();
-                        if messages.len() == 0 {
-                            messages = flow.ui.messages.iter().flat_map(|x| x.iter().map(|x| x.text.clone())).collect();
-                        }
-                        Err(RegisterError::ValidationError { messages })
-                    }
-                    _ => Err(RegisterError::Unknown),
-                }
-            }
+            StatusCode::BAD_REQUEST => Err(RegisterError::BadRequest400),
+            StatusCode::GONE => Err(RegisterError::Gone410),
             _ => Err(RegisterError::Unknown),
         },
         _ => Err(RegisterError::Unknown),
