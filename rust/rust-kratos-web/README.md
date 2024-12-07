@@ -4,10 +4,7 @@ This sandbox project is to test how to use Rust Kratos on an HTML page.
 
 ## Status
 
-WIP (Facing many issues using the Rust SDK provided by Ory team to get the
-CSRF token working, maybe working without the SDK can be a solution, but it
-shows Ory team's limitation when providing this tool for Rust. Will try again in
-the future if this problem is ever resolved)
+Working
 
 ## Getting Started
 
