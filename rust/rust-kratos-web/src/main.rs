@@ -1,3 +1,4 @@
+use actions::kratos::login::{get_login_flow, login, GetLoginFlowError, LoginError};
 use actions::kratos::register::{
     get_registration_flow, register, GetRegisterFlowError, RegisterError,
 };
@@ -8,6 +9,7 @@ use leptos::{
     html::Input, mount_to_body, view, window, IntoView, NodeRef, SignalGet, SignalSet, View,
 };
 use leptos_router::{use_navigate, use_query_map, Outlet, Route, Router, Routes};
+use ory_client::models::LoginFlow;
 use ory_client::models::{
     ui_node_attributes::UiNodeAttributes, ui_text::TypeEnum, RegistrationFlow, VerificationFlow,
 };
@@ -26,6 +28,7 @@ fn main() {
                             <Route path="register" view=RegistrationForm />
                             <Route path="resend" view=ResendVerificationForm />
                             <Route path="verify" view=VerificationForm />
+                            <Route path="user" view=UserPage />
                             <Route path="err" view=ErrorPage />
                         </Route>
                     </Routes>
@@ -45,6 +48,8 @@ fn KratosPage() -> impl IntoView {
                 <a href="/register">Register</a>
                 " "
                 <a href="/verify">Resend Verification</a>
+                " "
+                <a href="/user">User</a>
             </div>
             <Outlet />
         </div>
@@ -53,15 +58,130 @@ fn KratosPage() -> impl IntoView {
 
 #[component]
 fn LoginForm() -> impl IntoView {
+    let query = use_query_map();
+    let email_el: NodeRef<Input> = create_node_ref();
+    let password_el: NodeRef<Input> = create_node_ref();
+    let (flow, set_flow) = create_signal(None::<LoginFlow>);
+    let (message, set_message) = create_signal(None::<View>);
+    let get_login_flow = create_action(|flow_id: &String| get_login_flow(flow_id.clone()));
+    let login = create_action(|args: &(String, String, LoginFlow)| {
+        let (email, password, f) = args.clone();
+        login(email.clone(), password.clone(), f)
+    });
+
+    create_effect(move |_| match query.get().get("flow") {
+        None => {
+            if window()
+                .location()
+                .set_href(&format!("{}/self-service/login/browser", *API_BASE_URL))
+                .is_err()
+            {
+                use_navigate()("/error", Default::default());
+            }
+        }
+        Some(flow_id) => {
+            get_login_flow.dispatch(flow_id.to_string());
+        }
+    });
+
+    create_effect(move |_| {
+        if let Some(x) = get_login_flow.value().get() {
+            match x {
+                Ok(f) => set_flow.set(Some(f)),
+                Err(x) => match x {
+                    GetLoginFlowError::Gone410 => {
+                        use_navigate()("/", Default::default());
+                    }
+                    GetLoginFlowError::Unknown => {
+                        use_navigate()("/error", Default::default());
+                    }
+                },
+            }
+        }
+    });
+
+    create_effect(move |_| {
+        if let Some(f) = flow.get() {
+            set_message.set(None);
+            let mut messages: Vec<String> =
+                f.ui.nodes
+                    .iter()
+                    .flat_map(|x| x.messages.iter().map(|x| x.text.clone()))
+                    .collect();
+            if messages.len() == 0 {
+                messages =
+                    f.ui.messages
+                        .iter()
+                        .flat_map(|x| x.iter().map(|x| x.text.clone()))
+                        .collect();
+            }
+            set_message.set(Some(
+                view! {
+                    <ul>
+                        {messages
+                            .iter()
+                            .map(|x| { view! { <li>{x}</li> }.into_view() })
+                            .collect::<View>()}
+                    </ul>
+                }
+                .into_view(),
+            ));
+        }
+    });
+
+    create_effect(move |_| {
+        if let Some(x) = login.value().get() {
+            match x {
+                Ok(_) => {
+                    use_navigate()("/user", Default::default());
+                }
+                Err(e) => match e {
+                    LoginError::Gone410 => {
+                        use_navigate()("/login", Default::default());
+                    }
+                    LoginError::BadRequest400 => match flow.get() {
+                        Some(f) => {
+                            login.value().set(None);
+                            get_login_flow.dispatch(f.id);
+                        }
+                        None => {
+                            use_navigate()("/error", Default::default());
+                        }
+                    },
+                    LoginError::Unknown => {
+                        use_navigate()("/error", Default::default());
+                    }
+                },
+            }
+        }
+    });
+
     view! {
-        <div>
-            <h1>Login</h1>
-            <form action="">
-                <div>Email " "<input type="text" /></div>
-                <div>Password " "<input type="password" /></div>
-                <button>Login</button>
-            </form>
-        </div>
+        {move || match flow.get() {
+            None => view! {}.into_view(),
+            Some(f) => {
+                view! {
+                    <div>
+                        <h1>Login</h1>
+                        <form on:submit=move |e: SubmitEvent| {
+                            e.prevent_default();
+                            login
+                                .dispatch((
+                                    email_el.get().unwrap().value(),
+                                    password_el.get().unwrap().value(),
+                                    f.clone(),
+                                ));
+                        }>
+                            <div>Email " "<input type="text" node_ref=email_el /></div>
+                            <div>Password " "<input type="password" node_ref=password_el /></div>
+                            <button>Login</button>
+                            {move || message.get()}
+                        </form>
+                    </div>
+                }
+                    .into_view()
+            }
+        }}
     }
 }
 
@@ -491,6 +611,11 @@ fn RegistrationForm() -> impl IntoView {
             }
         }}
     }
+}
+
+#[component]
+fn UserPage() -> impl IntoView {
+    view! { <p>"Foo"</p> }
 }
 
 #[component]

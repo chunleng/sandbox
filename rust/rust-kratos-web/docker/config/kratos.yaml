@@ -29,9 +29,9 @@ serve:
     base_url: http://127.0.0.1:4434/
 
 selfservice:
-  default_browser_return_url: http://127.0.0.1:8080/
+  default_browser_return_url: http://127.0.0.1:8080/user
   allowed_return_urls:
-    - http://127.0.0.1:8080/
+    - http://127.0.0.1:8080/user
 
   methods:
     password:
