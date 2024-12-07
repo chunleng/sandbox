@@ -2,6 +2,7 @@ use actions::kratos::login::{get_login_flow, login, GetLoginFlowError, LoginErro
 use actions::kratos::register::{
     get_registration_flow, register, GetRegisterFlowError, RegisterError,
 };
+use actions::kratos::session::whoami;
 use actions::kratos::verify::{get_verify_flow, verify, GetVerifyFlowError, VerifyError};
 use config::API_BASE_URL;
 use leptos::{
@@ -615,7 +616,39 @@ fn RegistrationForm() -> impl IntoView {
 
 #[component]
 fn UserPage() -> impl IntoView {
-    view! { <p>"Foo"</p> }
+    let load_user_info = create_action(|(): &()| whoami());
+    create_effect(move |_| {
+        load_user_info.dispatch(());
+    });
+    view! {
+        <p>
+            {move || match load_user_info.value().get() {
+                Some(x) => {
+                    match x {
+                        Ok(x) => {
+                            view! {
+                                <>
+                                    <h1>"User Information"</h1>
+                                    <div>{x}</div>
+                                </>
+                            }
+                                .into_view()
+                        }
+                        Err(WhoAmIError::Unauthorized401) => {
+                            use_navigate()("/", Default::default());
+                            view! {}.into_view()
+                        }
+                        Err(WhoAmIError::Unknown) => {
+                            use_navigate()("/error", Default::default());
+                            view! {}.into_view()
+                        }
+                    }
+                        .into_view()
+                }
+                None => view! {}.into_view(),
+            }}
+        </p>
+    }
 }
 
 #[component]

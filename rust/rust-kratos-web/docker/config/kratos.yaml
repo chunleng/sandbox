@@ -68,6 +68,15 @@ selfservice:
             # - hook: session
             - hook: show_verification_ui
 
+session:
+  whoami:
+    tokenizer:
+      templates:
+        backend:
+          ttl: "1m"
+          jwks_url: file:///etc/config/kratos/backend.jwk.json
+          claims_mapper_url: file:///etc/config/kratos/backend.jsonnet
+
 log:
   level: trace
   format: text
