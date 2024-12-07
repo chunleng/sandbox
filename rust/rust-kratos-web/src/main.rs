@@ -1,8 +1,9 @@
 use actions::kratos::login::{get_login_flow, login, GetLoginFlowError, LoginError};
+use actions::kratos::logout::{logout, LogoutError};
 use actions::kratos::register::{
     get_registration_flow, register, GetRegisterFlowError, RegisterError,
 };
-use actions::kratos::session::whoami;
+use actions::kratos::session::{whoami, WhoAmIError};
 use actions::kratos::verify::{get_verify_flow, verify, GetVerifyFlowError, VerifyError};
 use config::API_BASE_URL;
 use leptos::{
@@ -41,6 +42,14 @@ fn main() {
 
 #[component]
 fn KratosPage() -> impl IntoView {
+    let logout = create_action(|(): &()| logout());
+    create_effect(move |_| match logout.value().get() {
+        Some(Ok(_)) => {}
+        Some(Err(LogoutError::Unknown)) => {
+            use_navigate()("/error", Default::default());
+        }
+        None => {}
+    });
     view! {
         <div>
             <div>
@@ -51,6 +60,10 @@ fn KratosPage() -> impl IntoView {
                 <a href="/verify">Resend Verification</a>
                 " "
                 <a href="/user">User</a>
+                " "
+                <button on:click=move |_| {
+                    logout.dispatch(());
+                }>Logout</button>
             </div>
             <Outlet />
         </div>
