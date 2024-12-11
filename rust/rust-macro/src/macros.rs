@@ -10,3 +10,10 @@ macro_rules! print_greeting {
         println!("Hello, {}!", concat!($head, $(" and ", $x),*));
     };
 }
+
+macro_rules! import_me {
+    () => {
+        println!("import_me is imported!");
+    }
+}
+pub(crate) use import_me;
