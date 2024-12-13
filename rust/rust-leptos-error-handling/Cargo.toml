@@ -1,0 +1,9 @@
+[package]
+name = "rust-leptos-error-handling"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+leptos = { version = "0.7.0", features = ["csr"] }
+leptos_router = "0.7.0"
+thiserror = "2.0.6"
