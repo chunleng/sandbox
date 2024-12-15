@@ -1,0 +1,41 @@
+apiVersion: skaffold/v3
+kind: Config
+build:
+  local:
+    push: false
+    concurrency: 0
+  artifacts:
+    - image: app
+      docker:
+        dockerfile: Dockerfile
+
+profiles:
+  - name: dev
+    activation:
+      - command: dev
+    build:
+      artifacts:
+        - image: app
+          docker:
+            target: dev
+          sync:
+            infer:
+              - "src/**/*"
+              - "Cargo.toml"
+              - "Cargo.lock"
+    manifests:
+      kustomize:
+        paths:
+          - "k8s/base"
+  - name: prod
+    activation:
+      - command: run
+    build:
+      artifacts:
+        - image: app
+          docker:
+            target: prod
+    manifests:
+      kustomize:
+        paths:
+          - "k8s/base"
