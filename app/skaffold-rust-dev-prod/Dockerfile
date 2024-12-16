@@ -3,11 +3,14 @@ WORKDIR /builder
 COPY Cargo.toml Cargo.toml
 COPY Cargo.lock Cargo.lock
 RUN mkdir src && touch src/lib.rs && \
-    cargo build && \
+    cargo fetch && \
     rm -rf src
 
-FROM builder_base AS dev
+FROM builder_base AS dev_dependencies
 RUN cargo install cargo-watch --version 8.5.3 --locked
+
+FROM builder_base AS dev
+COPY --from=dev_dependencies /usr/local/cargo/bin/cargo-watch /usr/local/cargo/bin/cargo-watch
 COPY src src
 CMD cargo watch -- cargo run
 

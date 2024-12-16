@@ -6,12 +6,15 @@ COPY app/backend/Cargo.toml app/backend/Cargo.toml
 COPY app/frontend/Cargo.toml app/frontend/Cargo.toml
 RUN mkdir -p app/backend/src && touch app/backend/src/lib.rs && \
     mkdir -p app/frontend/src && touch app/frontend/src/lib.rs && \
-    cargo build && \
+    cargo fetch && \
     rm app/backend/src/lib.rs && \
     rm app/frontend/src/lib.rs
 
-FROM builder_base AS dev
+FROM builder_base AS dev_dependencies
 RUN cargo install cargo-watch --version 8.5.3 --locked
+
+FROM builder_base AS dev
+COPY --from=dev_dependencies /usr/local/cargo/bin/cargo-watch /usr/local/cargo/bin/cargo-watch
 COPY app app
 
 FROM builder_base AS builder_prod_base
