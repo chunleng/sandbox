@@ -1,0 +1,6 @@
+resources:
+  - ../../base
+
+patchesStrategicMerge:
+  - ./backend.yaml
+  - ./frontend.yaml

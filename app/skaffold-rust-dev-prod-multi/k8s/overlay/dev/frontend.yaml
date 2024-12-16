@@ -1,0 +1,13 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-deployment
+  labels:
+    app: frontend
+spec:
+  template:
+    spec:
+      containers:
+        - name: frontend
+          image: dev_container
+          command: ["cargo", "watch", "--", "cargo", "run", "-p", "frontend"]

@@ -1,0 +1,41 @@
+apiVersion: skaffold/v3
+kind: Config
+build:
+  local:
+    push: false
+    concurrency: 0
+
+profiles:
+  - name: dev
+    activation:
+      - command: dev
+    build:
+      artifacts:
+        - image: dev_container
+          docker:
+            target: dev
+          sync:
+            manual:
+              - src: "app/**/*"
+                dest: "."
+              - src: "Cargo.lock"
+                dest: "."
+    manifests:
+      kustomize:
+        paths:
+          - "k8s/overlay/dev"
+  - name: prod
+    activation:
+      - command: run
+    build:
+      artifacts:
+        - image: backend
+          docker:
+            target: prod_backend
+        - image: frontend
+          docker:
+            target: prod_frontend
+    manifests:
+      kustomize:
+        paths:
+          - "k8s/base"
