@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: kratos-service
+spec:
+  type: ClusterIP
+  selector:
+    app: kratos
+  ports:
+    - name: kratos-public-service
+      protocol: TCP
+      port: 4433
+      targetPort: kratos-public
+    - name: kratos-admin-service
+      protocol: TCP
+      port: 4434
+      targetPort: kratos-admin

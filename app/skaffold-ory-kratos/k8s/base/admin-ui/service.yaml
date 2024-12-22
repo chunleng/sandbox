@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: admin-ui-service
+spec:
+  type: ClusterIP
+  selector:
+    app: admin-ui
+  ports:
+    - name: admin-ui
+      protocol: TCP
+      port: 4456
+      targetPort: admin-ui-http

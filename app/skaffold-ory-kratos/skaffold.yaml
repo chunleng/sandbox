@@ -1,0 +1,56 @@
+apiVersion: skaffold/v3
+kind: Config
+build:
+  local:
+    push: false
+    concurrency: 0
+  artifacts:
+    - image: kratos
+
+manifests:
+  kustomize:
+    paths:
+      - "k8s/base"
+
+portForward:
+  # Kratos Public
+  - resourceType: service
+    resourceName: kratos-service
+    namespace: default
+    port: 4433
+    localPort: 4433
+
+  # Kratos Admin
+  - resourceType: service
+    resourceName: kratos-service
+    namespace: default
+    port: 4434
+    localPort: 4434
+
+  # UI public
+  - resourceType: service
+    resourceName: public-ui-service
+    namespace: default
+    port: 4455
+    localPort: 4455
+
+  # UI admin
+  - resourceType: service
+    resourceName: admin-ui-service
+    namespace: default
+    port: 4456
+    localPort: 4456
+
+  # Mail SMTP
+  - resourceType: service
+    resourceName: mail-service
+    namespace: default
+    port: 1025
+    localPort: 1025
+
+  # Mail UI
+  - resourceType: service
+    resourceName: mail-service
+    namespace: default
+    port: 8025
+    localPort: 8025

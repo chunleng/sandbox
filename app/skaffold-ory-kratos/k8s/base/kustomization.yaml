@@ -1,0 +1,5 @@
+resources:
+  - ./kratos
+  - ./public-ui
+  - ./admin-ui
+  - ./mail

@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mock-mail
+  labels:
+    app: mail
+spec:
+  containers:
+    - name: mock-mail
+      image: axllent/mailpit:v1.21
+      env:
+        - name: MP_SMTP_AUTH_ACCEPT_ANY
+          value: "1"
+        - name: MP_SMTP_AUTH_ALLOW_INSECURE
+          value: "1"
+      ports:
+        - name: mail-smtp
+          containerPort: 1025
+        - name: mail-ui
+          containerPort: 8025

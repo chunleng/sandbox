@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mail-service
+spec:
+  type: ClusterIP
+  selector:
+    app: mail
+  ports:
+    - name: mail-smtp
+      protocol: TCP
+      port: 1025
+      targetPort: mail-smtp
+    - name: mail-ui
+      protocol: TCP
+      port: 8025
+      targetPort: mail-ui

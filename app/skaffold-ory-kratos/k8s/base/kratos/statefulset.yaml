@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: kratos
+  labels:
+    app: kratos
+spec:
+  selector:
+    matchLabels:
+      app: kratos
+  template:
+    metadata:
+      labels:
+        app: kratos
+    spec:
+      initContainers:
+        - name: kratos-migrate
+          image: kratos
+          args:
+            - migrate
+            - sql
+            - -e
+            - --yes
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/sqlite
+
+      containers:
+        - name: kratos
+          image: kratos
+          args:
+            - serve
+            - --watch-courier
+          ports:
+            - name: kratos-public
+              containerPort: 4433
+            - name: kratos-admin
+              containerPort: 4434
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/sqlite
+
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 200Mi
