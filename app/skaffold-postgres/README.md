@@ -14,5 +14,5 @@ skaffold dev
 
 ## Notes
 
-- The current working copy is mainly for development purpose only. Doesn't work
-  in production.
+- The current working copy is mainly for development purpose only. Wouldn't be
+  enough for best production practice.
