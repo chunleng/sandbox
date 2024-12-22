@@ -27,6 +27,22 @@ spec:
               value: root
             - name: POSTGRES_PASSWORD
               value: password
+          startupProbe:
+            exec:
+              command:
+                - pg_isready
+            periodSeconds: 1
+            timeoutSeconds: 2
+            successThreshold: 1
+            failureThreshold: 30
+          livenessProbe:
+            exec:
+              command:
+                - pg_isready
+            periodSeconds: 10
+            timeoutSeconds: 2
+            successThreshold: 1
+            failureThreshold: 1
 
   volumeClaimTemplates:
     - metadata:

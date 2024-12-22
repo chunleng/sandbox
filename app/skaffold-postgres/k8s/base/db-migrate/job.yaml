@@ -1,0 +1,25 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: db-migrate
+spec:
+  # In dev environment, we set ttlSecondsAfterFinished, backoffLimit and restartPolicy in the following manner so that
+  # when it fails, we can straight away recover with the next update of job. In prod, we can do it in similar way, but
+  # maybe we want to sync the job execution log in a proper place 1st
+  ttlSecondsAfterFinished: 0
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+      initContainers:
+        - name: resource-init
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              until telnet postgres-service 5432 > /dev/null 2>&1; do sleep 1; done
+      containers:
+        - name: db-migrate
+          image: db-migrate
+          args: ["-source", "file://migrations", "-database", "postgres://root:password@postgres-service:5432/?sslmode=disable", "up"]

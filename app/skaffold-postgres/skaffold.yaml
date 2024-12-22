@@ -1,6 +1,10 @@
 apiVersion: skaffold/v3
 kind: Config
 
+build:
+  local:
+    push: false
+
 profiles:
   - name: dev
     activation:
@@ -9,6 +13,13 @@ profiles:
       kustomize:
         paths:
           - "k8s/overlays/dev"
+    build:
+      artifacts:
+        - image: db-migrate
+          context: ./db
+          docker:
+            dockerfile: Dockerfile
+
 
 portForward:
   - resourceType: service
