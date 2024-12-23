@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: admin-ui-deployment
+  labels:
+    app: admin-ui
+spec:
+  containers:
+    - name: admin-ui
+      image: ghcr.io/dfoxg/kratos-admin-ui:v2.4.0
+      ports:
+        - name: admin-ui-http
+          containerPort: 8080
+      env:
+        # Full DNS is needed for the following URLs. I assume it's because of some application server routing
+        # issues.
+        - name: KRATOS_PUBLIC_URL
+          value: http://kratos-service.default.svc.cluster.local:4433
+        - name: KRATOS_ADMIN_URL
+          value: http://kratos-service.default.svc.cluster.local:4434

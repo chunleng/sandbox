@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Pod
+metadata:
+  name: public-ui-deployment
+  labels:
+    app: public-ui
+spec:
+  containers:
+    - name: public-ui
+      image: oryd/kratos-selfservice-ui-node:v1.3.0
+      env:
+        - name: KRATOS_PUBLIC_URL
+          value: http://kratos-service:4433
+        - name: KRATOS_BROWSER_URL
+          value: http://127.0.0.1:4433
+        - name: COOKIE_SECRET
+          value: changeme
+        - name: CSRF_COOKIE_NAME
+          value: kratos_csrf_ui
+        - name: CSRF_COOKIE_SECRET
+          value: changeme
+      ports:
+        - name: public-ui-http
+          containerPort: 3000
