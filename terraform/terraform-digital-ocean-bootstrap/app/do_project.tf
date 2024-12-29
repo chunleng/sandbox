@@ -1,3 +1,3 @@
 data "digitalocean_project" "project" {
-  name = "sandbox"
+  name = "${lower(var.stage)}-sandbox"
 }

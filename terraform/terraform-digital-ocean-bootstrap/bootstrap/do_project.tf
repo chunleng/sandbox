@@ -1,5 +1,5 @@
 resource "digitalocean_project" "project" {
-  name        = var.project
+  name        = "${lower(var.stage)}-${var.project}"
   description = "${var.stage} deployment of ${var.project}"
   environment = var.stage
   resources = [
