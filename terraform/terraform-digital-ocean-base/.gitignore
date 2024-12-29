@@ -1,0 +1,7 @@
+.terraform/
+
+# This is the usual place I will store my secrets and added here to prevent accidental commit of secret
+.envrc
+
+# We don't want to check in tfstate in the sandbox project
+terraform.tfstate*
