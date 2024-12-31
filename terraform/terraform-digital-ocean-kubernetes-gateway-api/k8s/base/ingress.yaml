@@ -1,0 +1,15 @@
+apiVersion: apisix.apache.org/v2
+kind: ApisixRoute
+metadata:
+  name: web-route
+spec:
+  http:
+    - name: web-http-route
+      match:
+        hosts:
+          - www.example.com
+        paths:
+          - /*
+      backends:
+        - serviceName: web-service
+          servicePort: 80
