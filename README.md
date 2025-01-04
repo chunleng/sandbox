@@ -12,13 +12,25 @@ every single things that I have tried, succeed or not
 
 ## Layout
 
-Simply, folders of `Programming Language` followed by topic of experiment. For
-example:
+The top layer of the folder contains folders of the following category:
+
+- `template`: useful setups to start a project.
+- `docker`: Docker image that I deploy to docker hub to mainly use for testing.
+- `terraform`, `rust`...: Refers to the experiments I did in that language.
+- `tool`: some quick tools I built mainly to use for testing.
+
+Example:
 
 ```text
 .
-└─ rust
-  └─ tracing -> to test out Rust `tracing` library
+├─ docker
+│  └─ docker-nginx-sample -> a sample nginx webpage
+├─ rust
+│  └─ tracing -> to test out Rust `tracing` library
+├─ template
+│  └─ rabbitmq -> commonly-used setup for rabbitmq
+└─ tool
+   └─ send-email -> tool for sending email
 ```
 
 ## Project README
