@@ -35,6 +35,17 @@ helm install apisix apisix/apisix \
   --create-namespace \
   --set service.type=LoadBalancer \
   --set service.annotations.kubernetes\\.digitalocean\\.com/load-balancer-id=<LB_ID> \
+  --set ingress-controller.enabled=true \
+  --set ingress-controller.config.apisix.serviceNamespace=ingress-apisix \
+  --set ingress-controller.config.kubernetes.enableApiGateways=true
+# The load balancer name needs to be applied after the resource is linked, if
+# not it will hit validation error
+helm upgrade apisix apisix/apisix \
+  --version 2.10.0 \
+  --namespace ingress-apisix \
+  --create-namespace \
+  --set service.type=LoadBalancer \
+  --set service.annotations.kubernetes\\.digitalocean\\.com/load-balancer-id=<LB_ID> \
   --set service.annotations.service\\.beta\\.kubernetes\\.io/do-loadbalancer-name=sandbox-lb \
   --set ingress-controller.enabled=true \
   --set ingress-controller.config.apisix.serviceNamespace=ingress-apisix \
