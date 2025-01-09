@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package coffee;
+
+service Coffeeshop {
+  rpc BuyCoffee (CoffeeOrder) returns (BuyCoffeeResponse);
+  rpc CheckCoffee (OrderInformation) returns (stream CheckCoffeeResponse);
+}
+
+message CoffeeOrder { }
+
+message BuyCoffeeResponse {
+  optional string order_id = 1;
+}
+
+message OrderInformation {
+  string order_id = 1;
+}
+
+enum OrderStatus {
+  UNKNOWN = 0;
+  QUEUED = 1;
+  PREPARING = 2;
+  READY = 3;
+}
+
+message CheckCoffeeResponse {
+  OrderStatus order_status = 1;
+}
