@@ -1,4 +1,6 @@
 use declarative_macros::import_me;
+use procedural_macros::calc;
+
 mod declarative_macros;
 
 fn main() {
@@ -8,4 +10,9 @@ fn main() {
 
     // This macros need to be imported to use
     import_me!();
+
+    print!("{}", calc! {1 + (3 + 2)});
+
+    // TODO this case doesn't work!
+    // print!("{}", calc! {(1 + 3) + 2});
 }

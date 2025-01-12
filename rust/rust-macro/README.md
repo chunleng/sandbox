@@ -14,3 +14,8 @@ To run,
 ```bash
 cargo run
 ```
+
+## Note
+
+- Did not manage to get the logic for compiling instruction right, and it does
+  not work for `(x + y) - z` situation. But I am leaving it at that.

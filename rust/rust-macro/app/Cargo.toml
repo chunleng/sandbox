@@ -4,3 +4,4 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+procedural_macros = { version = "0.1.0", path = "../procedural_macros" }
