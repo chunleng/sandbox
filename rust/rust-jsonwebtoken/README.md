@@ -4,7 +4,7 @@ This sandbox explores rust `jsonwebtoken` and JWT/JWK related crates.
 
 ## Status
 
-WIP (Enable to encode EdDSA key, see note)
+WIP (Lack feature to encode EdDSA key, see note)
 
 ## Getting Started
 
