@@ -1,6 +1,5 @@
-use macros::import_me;
-
-mod macros;
+use declarative_macros::import_me;
+mod declarative_macros;
 
 fn main() {
     print_greeting!();
