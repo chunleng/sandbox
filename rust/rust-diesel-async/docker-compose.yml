@@ -1,0 +1,36 @@
+services:
+  postgres:
+    image: postgres:15
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: demo
+    healthcheck:
+      test: pg_isready
+      interval: 1s
+      retries: 30
+      timeout: 2s
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  diesel-migrate:
+    build:
+      dockerfile: db-migrate.dockerfile
+    environment:
+      DB_ADAPTER: postgres
+      DB_USER: postgres
+      DB_PASSWORD: password
+      DB_PATH: postgres:5432/demo
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./src/gen/:/app/src/gen
+      - ./migrations:/app/migrations
+      - ./diesel.toml:/app/diesel.toml
+    restart: no
+
+volumes:
+  postgres_data:

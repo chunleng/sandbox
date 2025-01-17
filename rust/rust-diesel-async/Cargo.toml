@@ -1,0 +1,9 @@
+[package]
+name = "rust-diesel-async"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+diesel = { version = "2.2.6", features = ["postgres"] }
+diesel-async = { version = "0.5.2", features = ["postgres", "deadpool"] }
+tokio = { version = "1.43.0", features = ["full"] }
