@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: watch-deployment
+  labels:
+    app: watch
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: watch
+  template:
+    metadata:
+      labels:
+        app: watch
+    spec:
+      containers:
+        - name: watch
+          image: watch
+          args: ["cat", "/etc/secret-volume/secret-file*"]
+          volumeMounts:
+            - name: secret-volume
+              readOnly: true
+              mountPath: "/etc/secret-volume"
+      volumes:
+        - name: secret-volume
+          secret:
+            secretName: secrets
