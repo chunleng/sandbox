@@ -1,0 +1,6 @@
+module(
+    name = "bazel-rust",
+    version = "1.0"
+)
+
+bazel_dep(name = "rules_rust", version  = "0.57.1")

@@ -1,0 +1,4 @@
+/target
+
+# Bazel ignores
+bazel-*
