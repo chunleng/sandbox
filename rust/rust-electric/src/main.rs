@@ -1,6 +1,7 @@
 use std::error::Error;
 
 use crossterm::event::{self, Event, KeyCode};
+use db::init_db;
 use ratatui::{
     DefaultTerminal, Frame,
     buffer::Buffer,
@@ -9,7 +10,10 @@ use ratatui::{
     widgets::{Block, Borders, Paragraph, Widget},
 };
 
+mod db;
+
 fn main() -> Result<(), Box<dyn Error>> {
+    init_db();
     let mut terminal = ratatui::init();
     let app_result = App::new().run(&mut terminal);
     ratatui::restore();

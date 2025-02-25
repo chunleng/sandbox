@@ -5,4 +5,5 @@ edition = "2024"
 
 [dependencies]
 crossterm = "0.28.1"
+diesel = { version = "2.2.7", features = ["postgres"] }
 ratatui = "0.29.0"
