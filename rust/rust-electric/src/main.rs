@@ -1,16 +1,23 @@
-use std::error::Error;
+use std::{
+    error::Error,
+    sync::{Arc, RwLock},
+    thread::{self, sleep},
+    time::Duration,
+};
 
-use crossterm::event::{self, Event, KeyCode};
-use db::init_db;
+use crossterm::event::{self, Event, KeyCode, poll};
+use db::{Person, init_db};
+use electric::{SyncOperation, sync};
 use ratatui::{
     DefaultTerminal, Frame,
     buffer::Buffer,
     layout::{Constraint, Direction, Layout, Rect},
     text::Text,
-    widgets::{Block, Borders, Paragraph, Widget},
+    widgets::{Block, Borders, List, Widget},
 };
 
 mod db;
+mod electric;
 
 fn main() -> Result<(), Box<dyn Error>> {
     init_db();
@@ -21,16 +28,65 @@ fn main() -> Result<(), Box<dyn Error>> {
     app_result
 }
 
+#[derive(Default)]
 struct App {
     exit: bool,
+    persons: Arc<RwLock<Vec<Person>>>,
 }
 
 impl App {
     fn new() -> Self {
-        Self { exit: false }
+        Self::default()
+    }
+
+    fn spawn_updater(&self) {
+        let persons = self.persons.clone();
+        thread::spawn(move || {
+            loop {
+                let mut up_to_date = true;
+                let sync = sync();
+                {
+                    let mut persons_guard = persons.write().unwrap();
+                    sync.iter().for_each(|x| match x {
+                        SyncOperation::Insert(y) => {
+                            persons_guard.push(Person {
+                                id: y.id,
+                                name: y.name.to_owned(),
+                                age: y.age,
+                            });
+                        }
+                        SyncOperation::Delete(y) => {
+                            if let Some(idx) = persons_guard.iter().position(|z| z.id == y.id) {
+                                persons_guard.remove(idx);
+                            }
+                        }
+                        SyncOperation::Update(y) => {
+                            if let Some(idx) = persons_guard.iter().position(|z| z.id == y.id) {
+                                if let Some(element) = persons_guard.get_mut(idx) {
+                                    if let Some(name) = &y.name {
+                                        element.name = name.to_owned();
+                                    }
+                                    if let Some(age) = &y.age {
+                                        element.age = age.to_owned();
+                                    }
+                                }
+                            }
+                        }
+                        SyncOperation::UpToDate => {
+                            up_to_date = false;
+                        }
+                    })
+                }
+
+                if !up_to_date {
+                    sleep(Duration::from_secs(1));
+                }
+            }
+        });
     }
 
     fn run(&mut self, terminal: &mut DefaultTerminal) -> Result<(), Box<dyn Error>> {
+        self.spawn_updater();
         while !self.exit {
             terminal.draw(|frame| self.draw(frame))?;
             self.handle_event()?;
@@ -43,11 +99,13 @@ impl App {
     }
 
     fn handle_event(&mut self) -> Result<(), Box<dyn Error>> {
-        match event::read()? {
-            Event::Key(k) if k.code == KeyCode::Char('q') || k.code == KeyCode::Char('Q') => {
-                self.exit = true;
+        if poll(Duration::from_secs(1))? {
+            match event::read()? {
+                Event::Key(k) if k.code == KeyCode::Char('q') || k.code == KeyCode::Char('Q') => {
+                    self.exit = true;
+                }
+                _ => {}
             }
-            _ => {}
         }
         Ok(())
     }
@@ -59,17 +117,20 @@ impl Widget for &App {
             .direction(Direction::Vertical)
             .constraints([Constraint::Fill(1), Constraint::Length(1)])
             .split(area);
-        let content_layout = Layout::default()
-            .direction(Direction::Horizontal)
-            .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
-            .split(overall_layout[0]);
 
-        Paragraph::new("Shows items")
+        let p: Vec<String> = self
+            .persons
+            .read()
+            .unwrap()
+            .iter()
+            .map(|x| match &x.age {
+                Some(age) => format!("{}. {}, {} y.o.", x.id, x.name, age),
+                _ => format!("{}. {}", x.id, x.name),
+            })
+            .collect();
+        List::new(p)
             .block(Block::new().borders(Borders::ALL))
-            .render(content_layout[0], buf);
-        Paragraph::new("Shows log")
-            .block(Block::new().borders(Borders::ALL))
-            .render(content_layout[1], buf);
+            .render(overall_layout[0], buf);
         Text::raw("Press 'Q' to quit").render(overall_layout[1], buf);
     }
 }

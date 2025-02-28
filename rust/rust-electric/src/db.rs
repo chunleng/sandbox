@@ -1,4 +1,5 @@
 use diesel::prelude::*;
+use serde::Deserialize;
 
 table! {
     person (id) {
@@ -14,6 +15,13 @@ table! {
 pub struct NewPerson {
     name: String,
     age: Option<i32>,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+pub struct Person {
+    pub id: i32,
+    pub name: String,
+    pub age: Option<i32>,
 }
 
 pub fn init_db() {
