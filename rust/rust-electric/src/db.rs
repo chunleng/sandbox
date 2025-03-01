@@ -17,6 +17,13 @@ pub struct NewPerson {
     pub age: Option<i32>,
 }
 
+#[derive(AsChangeset)]
+#[diesel(table_name = person)]
+pub struct UpdatePerson {
+    pub name: Option<String>,
+    pub age: Option<Option<i32>>,
+}
+
 #[derive(Clone, Debug, Deserialize)]
 pub struct Person {
     pub id: i32,
@@ -71,4 +78,12 @@ pub fn delete_person(id: i32) {
     diesel::delete(dsl::person.filter(dsl::id.eq(id)))
         .execute(&mut get_conn())
         .expect("Error deleting person");
+}
+
+pub fn update_person(id: i32, update_person: UpdatePerson) {
+    use person::dsl;
+    diesel::update(dsl::person.filter(dsl::id.eq(id)))
+        .set(update_person)
+        .execute(&mut get_conn())
+        .expect("Error updating person");
 }
