@@ -5,6 +5,7 @@ use std::{
     time::Duration,
 };
 
+use component::add::{AddComponent, AddEvent};
 use crossterm::event::{self, Event, KeyCode, poll};
 use db::{Person, init_db};
 use electric::{SyncOperation, sync};
@@ -16,6 +17,8 @@ use ratatui::{
     widgets::{Block, Borders, List, Widget},
 };
 
+mod component;
+mod control;
 mod db;
 mod electric;
 
@@ -28,10 +31,29 @@ fn main() -> Result<(), Box<dyn Error>> {
     app_result
 }
 
+#[derive(PartialEq, Eq)]
+enum AppMode {
+    Main,
+    Add,
+}
+
+impl Default for AppMode {
+    fn default() -> Self {
+        Self::Main
+    }
+}
+
+#[derive(Default)]
+struct Components {
+    add_component: AddComponent,
+}
+
 #[derive(Default)]
 struct App {
     exit: bool,
     persons: Arc<RwLock<Vec<Person>>>,
+    mode: AppMode,
+    components: Components,
 }
 
 impl App {
@@ -100,11 +122,28 @@ impl App {
 
     fn handle_event(&mut self) -> Result<(), Box<dyn Error>> {
         if poll(Duration::from_secs(1))? {
-            match event::read()? {
-                Event::Key(k) if k.code == KeyCode::Char('q') || k.code == KeyCode::Char('Q') => {
-                    self.exit = true;
+            match &self.mode {
+                AppMode::Main => match event::read()? {
+                    Event::Key(k)
+                        if k.code == KeyCode::Char('q') || k.code == KeyCode::Char('Q') =>
+                    {
+                        self.exit = true;
+                    }
+                    Event::Key(k)
+                        if k.code == KeyCode::Char('a') || k.code == KeyCode::Char('A') =>
+                    {
+                        self.components.add_component = AddComponent::default();
+                        self.mode = AppMode::Add;
+                    }
+                    _ => {}
+                },
+                AppMode::Add => {
+                    if self.components.add_component.handle_event(&event::read()?)
+                        == AddEvent::Ended
+                    {
+                        self.mode = AppMode::Main;
+                    }
                 }
-                _ => {}
             }
         }
         Ok(())
@@ -131,6 +170,13 @@ impl Widget for &App {
         List::new(p)
             .block(Block::new().borders(Borders::ALL))
             .render(overall_layout[0], buf);
-        Text::raw("Press 'Q' to quit").render(overall_layout[1], buf);
+        match &self.mode {
+            AppMode::Main => {
+                Text::raw("Press 'q' to quit, 'a' to add item").render(overall_layout[1], buf);
+            }
+            AppMode::Add => {
+                self.components.add_component.render(area, buf);
+            }
+        }
     }
 }

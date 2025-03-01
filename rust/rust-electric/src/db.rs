@@ -13,8 +13,8 @@ table! {
 #[derive(Insertable)]
 #[diesel(table_name = person)]
 pub struct NewPerson {
-    name: String,
-    age: Option<i32>,
+    pub name: String,
+    pub age: Option<i32>,
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -24,15 +24,16 @@ pub struct Person {
     pub age: Option<i32>,
 }
 
-pub fn init_db() {
-    let mut conn =
-        PgConnection::establish("postgres://postgres:password@localhost:5432/demo").unwrap();
-
-    create_table(&mut conn);
-    fill_values(&mut conn);
+fn get_conn() -> PgConnection {
+    PgConnection::establish("postgres://postgres:password@localhost:5432/demo").unwrap()
 }
 
-fn create_table(conn: &mut PgConnection) {
+pub fn init_db() {
+    create_table();
+    fill_values();
+}
+
+fn create_table() {
     diesel::sql_query(
         "CREATE TABLE IF NOT EXISTS person (
             id SERIAL PRIMARY KEY,
@@ -40,22 +41,27 @@ fn create_table(conn: &mut PgConnection) {
             age INT
         )",
     )
-    .execute(conn)
+    .execute(&mut get_conn())
     .expect("Error initiating tables");
 }
 
-fn fill_values(conn: &mut PgConnection) {
-    let num_of_records: i64 = person::dsl::person.count().get_result(conn).unwrap();
+fn fill_values() {
+    let num_of_records: i64 = person::dsl::person
+        .count()
+        .get_result(&mut get_conn())
+        .unwrap();
 
     if num_of_records == 0 {
-        let new_person = NewPerson {
+        add_person(NewPerson {
             name: "John".to_string(),
             age: None,
-        };
-
-        diesel::insert_into(person::table)
-            .values(&new_person)
-            .execute(conn)
-            .expect("Error filling initial values");
+        });
     }
+}
+
+pub fn add_person(new_person: NewPerson) {
+    diesel::insert_into(person::table)
+        .values(&new_person)
+        .execute(&mut get_conn())
+        .expect("Error adding person");
 }
