@@ -5,7 +5,10 @@ use std::{
     time::Duration,
 };
 
-use component::add::{AddComponent, AddEvent};
+use component::{
+    add::{AddComponent, AddEvent},
+    delete::{DeleteComponent, DeleteEvent},
+};
 use crossterm::event::{self, Event, KeyCode, poll};
 use db::{Person, init_db};
 use electric::{SyncOperation, sync};
@@ -35,6 +38,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 enum AppMode {
     Main,
     Add,
+    Delete,
 }
 
 impl Default for AppMode {
@@ -46,6 +50,7 @@ impl Default for AppMode {
 #[derive(Default)]
 struct Components {
     add_component: AddComponent,
+    delete_component: DeleteComponent,
 }
 
 #[derive(Default)]
@@ -135,11 +140,27 @@ impl App {
                         self.components.add_component = AddComponent::default();
                         self.mode = AppMode::Add;
                     }
+                    Event::Key(k)
+                        if k.code == KeyCode::Char('d') || k.code == KeyCode::Char('D') =>
+                    {
+                        self.components.delete_component = DeleteComponent::default();
+                        self.mode = AppMode::Delete;
+                    }
                     _ => {}
                 },
                 AppMode::Add => {
                     if self.components.add_component.handle_event(&event::read()?)
                         == AddEvent::Ended
+                    {
+                        self.mode = AppMode::Main;
+                    }
+                }
+                AppMode::Delete => {
+                    if self
+                        .components
+                        .delete_component
+                        .handle_event(&event::read()?)
+                        == DeleteEvent::Ended
                     {
                         self.mode = AppMode::Main;
                     }
@@ -172,10 +193,14 @@ impl Widget for &App {
             .render(overall_layout[0], buf);
         match &self.mode {
             AppMode::Main => {
-                Text::raw("Press 'q' to quit, 'a' to add item").render(overall_layout[1], buf);
+                Text::raw("Press 'q' to quit, 'a' to add item, 'd' to delete item")
+                    .render(overall_layout[1], buf);
             }
             AppMode::Add => {
                 self.components.add_component.render(area, buf);
+            }
+            AppMode::Delete => {
+                self.components.delete_component.render(area, buf);
             }
         }
     }

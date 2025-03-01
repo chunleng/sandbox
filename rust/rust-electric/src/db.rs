@@ -65,3 +65,10 @@ pub fn add_person(new_person: NewPerson) {
         .execute(&mut get_conn())
         .expect("Error adding person");
 }
+
+pub fn delete_person(id: i32) {
+    use person::dsl;
+    diesel::delete(dsl::person.filter(dsl::id.eq(id)))
+        .execute(&mut get_conn())
+        .expect("Error deleting person");
+}
