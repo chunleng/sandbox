@@ -60,6 +60,7 @@ struct Components {
 struct App {
     exit: bool,
     persons: Arc<RwLock<Vec<Person>>>,
+    logs: Arc<RwLock<Vec<Vec<SyncOperation>>>>,
     mode: AppMode,
     components: Components,
 }
@@ -71,6 +72,7 @@ impl App {
 
     fn spawn_updater(&self) {
         let persons = self.persons.clone();
+        let logs = self.logs.clone();
         thread::spawn(move || {
             loop {
                 let mut up_to_date = true;
@@ -106,6 +108,12 @@ impl App {
                             up_to_date = false;
                         }
                     })
+                }
+                {
+                    let mut logs_guard = logs.write().unwrap();
+                    if sync != [SyncOperation::UpToDate] {
+                        logs_guard.push(sync);
+                    }
                 }
 
                 if !up_to_date {
@@ -194,7 +202,11 @@ impl Widget for &App {
     fn render(self, area: Rect, buf: &mut Buffer) {
         let overall_layout = Layout::default()
             .direction(Direction::Vertical)
-            .constraints([Constraint::Fill(1), Constraint::Length(1)])
+            .constraints([
+                Constraint::Fill(1),
+                Constraint::Length(7),
+                Constraint::Length(1),
+            ])
             .split(area);
 
         let p: Vec<String> = self
@@ -208,14 +220,24 @@ impl Widget for &App {
             })
             .collect();
         List::new(p)
-            .block(Block::new().borders(Borders::ALL))
+            .block(Block::new().borders(Borders::ALL).title("Persons"))
             .render(overall_layout[0], buf);
+
+        let l = self.logs.read().unwrap();
+        let l: Vec<String> = l[l.len().saturating_sub(5)..]
+            .iter()
+            .map(|x| format!("{:?}", x))
+            .collect();
+        List::new(l)
+            .block(Block::new().borders(Borders::ALL).title("Logs"))
+            .render(overall_layout[1], buf);
+
         match &self.mode {
             AppMode::Main => {
                 Text::raw(
                     "Press 'q' to quit, 'a' to add item, 'd' to delete item, 'u' to update item",
                 )
-                .render(overall_layout[1], buf);
+                .render(overall_layout[2], buf);
             }
             AppMode::Add => {
                 self.components.add_component.render(area, buf);

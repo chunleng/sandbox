@@ -14,7 +14,7 @@ struct TempValue {
     headers: Value,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum SyncOperation {
     Insert(Insert),
     Update(Update),
@@ -44,7 +44,7 @@ impl<'de> Deserialize<'de> for SyncOperation {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Insert {
     pub id: i32,
     pub name: String,
@@ -69,7 +69,7 @@ impl<'de> Deserialize<'de> for Insert {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Update {
     pub id: i32,
     pub name: Option<String>,
@@ -92,7 +92,7 @@ impl<'de> Deserialize<'de> for Update {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Delete {
     pub id: i32,
 }
