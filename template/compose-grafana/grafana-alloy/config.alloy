@@ -1,0 +1,46 @@
+logging {
+  level  = "info"
+  format = "logfmt"
+}
+
+livedebugging {
+  enabled = true
+}
+
+otelcol.receiver.otlp "default" {
+  grpc {
+    endpoint = "0.0.0.0:4317"
+  }
+
+  http {
+    endpoint = "0.0.0.0:4318"
+  }
+
+  output {
+    metrics = [otelcol.processor.batch.default.input]
+    logs    = [otelcol.processor.batch.default.input]
+    traces  = [otelcol.processor.batch.default.input]
+  }
+}
+
+otelcol.processor.batch "default" {
+  output {
+    metrics = [otelcol.exporter.debug.show_debug.input]
+    logs    = [otelcol.exporter.debug.show_debug.input, otelcol.exporter.loki.loki_default.input]
+    traces  = [otelcol.exporter.debug.show_debug.input]
+  }
+}
+
+otelcol.exporter.debug "show_debug" {
+  verbosity = "detailed"
+}
+
+otelcol.exporter.loki "loki_default" {
+  forward_to = [loki.write.grafana_local_logs.receiver]
+}
+
+loki.write "grafana_local_logs" {
+  endpoint {
+    url = "http://grafana-loki:3100/loki/api/v1/push"
+  }
+}
