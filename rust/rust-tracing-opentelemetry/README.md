@@ -5,7 +5,7 @@ collector.
 
 ## Status
 
-WIP
+Working
 
 ## Getting Started
 
@@ -16,3 +16,11 @@ docker-compose up
 # Start app
 cargo run
 ```
+
+## Note
+
+- Seems like the version difference changes things quite a lot for
+  `opentelemetry-*` libraries.
+- This example contains:
+  * Setting of service name
+  * Setting of a sample rate
