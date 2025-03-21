@@ -1,0 +1,10 @@
+# @grpc-global-import-path ../proto
+# @grpc-global-proto coffee_service.proto
+# @grpc-plaintext
+# @Content-Type grpc-plaintext
+# @accept chunked
+GRPC {{URL}} coffee.Coffeeshop/CheckCoffee
+
+{
+    "order_id": "0"
+}

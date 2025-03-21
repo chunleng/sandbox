@@ -1,0 +1,4 @@
+# @grpc-global-import-path ../proto
+# @grpc-global-proto coffee_service.proto
+# @grpc-plaintext
+GRPC {{URL}} coffee.Coffeeshop/BuyCoffee
