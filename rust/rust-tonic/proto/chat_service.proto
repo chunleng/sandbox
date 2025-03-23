@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package chat;
+
+service Chatbot {
+  rpc Converse (stream ChatMessage) returns (stream ChatMessage);
+}
+
+message ChatMessage {
+  string content = 1;
+}

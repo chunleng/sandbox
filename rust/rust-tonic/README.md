@@ -22,7 +22,15 @@ grpcurl -proto proto/coffee_service.proto -plaintext localhost:3000 coffee.Coffe
 ORDER_ID=0; grpcurl -proto proto/coffee_service.proto -plaintext -d "{\"order_id\": \"${ORDER_ID}\"}" localhost:3000 coffee.Coffeeshop/CheckCoffee
 ```
 
-## Notes
+## Chatbot Example
 
-- Currently, only the server is build. I might want to consider building the
-  client as well.
+The chatbot program allows you to chat with the bot using a single function
+(bidirectional streaming)
+
+```bash
+# To start the service
+cargo run --example=chatbot-server
+
+# To start the client
+cargo run --example=chatbot-client
+```
