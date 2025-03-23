@@ -6,11 +6,16 @@ This sandbox project is to test on how to use Tonic GRPC server.
 
 Working
 
-## Getting Started
+## Coffeeshop Example
+
+The coffeeshop program is a simple program that allows you to
+
+- Order a coffee (A normal request-response gRPC)
+- Wait for your order to be ready (A request that has a streaming response)
 
 ```bash
 # To start the service
-cargo run
+cargo run --example=coffeeshop-server
 
 # To test
 grpcurl -proto proto/coffee_service.proto -plaintext localhost:3000 coffee.Coffeeshop/BuyCoffee

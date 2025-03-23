@@ -1,6 +1,6 @@
-use coffee::{
-    coffeeshop_server::Coffeeshop, BuyCoffeeResponse, CheckCoffeeResponse, CoffeeOrder,
-    OrderInformation, OrderStatus,
+use rust_tonic::coffee::{
+    coffeeshop_server::{self, Coffeeshop},
+    BuyCoffeeResponse, CheckCoffeeResponse, CoffeeOrder, OrderInformation, OrderStatus,
 };
 use std::{collections::HashMap, sync::LazyLock, time::Duration};
 use tokio::{
@@ -10,8 +10,6 @@ use tokio::{
 };
 use tokio_stream::wrappers::ReceiverStream;
 use tonic::{transport::Server, Request, Response, Status};
-
-mod coffee;
 
 struct OrderDetails {
     status: OrderStatus,
@@ -115,7 +113,7 @@ impl Coffeeshop for LocalCoffeeshop {
 #[tokio::main]
 async fn main() {
     Server::builder()
-        .add_service(coffee::coffeeshop_server::CoffeeshopServer::new(
+        .add_service(coffeeshop_server::CoffeeshopServer::new(
             LocalCoffeeshop::default(),
         ))
         .serve("127.0.0.1:3000".parse().unwrap())
