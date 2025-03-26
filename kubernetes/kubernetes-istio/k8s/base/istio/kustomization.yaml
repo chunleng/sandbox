@@ -1,0 +1,5 @@
+resources:
+  - ./access-control.yaml
+  - ./gateway-spiffe.yaml
+  - ./sidecar-spiffe.yaml
+  - ./telemetry.yaml

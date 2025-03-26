@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: default
+  labels:
+    # This will instruct istio to add sidecar proxy to the pod
+    istio-injection: enabled

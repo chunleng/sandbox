@@ -1,0 +1,40 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-internal-2
+  labels:
+    app: web-internal-2
+spec:
+  ports:
+    - port: 80
+      name: http
+  selector:
+    app: web-internal-2
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: web-internal-2
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-internal-2
+  labels:
+    app: web-internal-2
+spec:
+  selector:
+    matchLabels:
+      app: web-internal-2
+  template:
+    metadata:
+      labels:
+        app: web-internal-2
+        type: internal
+    spec:
+      serviceAccountName: web-internal-2
+      containers:
+        - name: nginx-sample
+          image: chunleng/nginx-sample
+          ports:
+            - containerPort: 80

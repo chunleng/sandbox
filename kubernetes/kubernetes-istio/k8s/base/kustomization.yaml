@@ -1,0 +1,7 @@
+resources:
+  - ./istio
+  - ./namespace.yaml
+  - ./web-external.yaml
+  - ./web-internal.yaml
+  - ./web-internal-2.yaml
+  - ./gateway.yaml

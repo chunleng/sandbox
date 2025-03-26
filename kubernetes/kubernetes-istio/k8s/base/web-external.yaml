@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-external
+  labels:
+    app: web-external
+spec:
+  ports:
+    - port: 80
+      name: http
+  selector:
+    app: web-external
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: web-external
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-external
+  labels:
+    app: web-external
+spec:
+  selector:
+    matchLabels:
+      app: web-external
+  template:
+    metadata:
+      labels:
+        app: web-external
+    spec:
+      serviceAccountName: web-external
+      containers:
+        - name: nginx-sample
+          image: chunleng/nginx-sample
+          ports:
+            - containerPort: 80

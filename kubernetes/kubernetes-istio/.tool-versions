@@ -1,0 +1,4 @@
+istioctl 1.25.0
+skaffold 2.13.2
+kustomize 5.4.2
+helm 3.13.3

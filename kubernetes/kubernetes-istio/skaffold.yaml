@@ -1,0 +1,15 @@
+apiVersion: skaffold/v3
+kind: Config
+
+manifests:
+  kustomize:
+    paths:
+      - "k8s/base"
+
+portForward:
+  - resourceType: service
+    # This gateway is deployed by istio on setting gatewayClassName=istio in gateway
+    resourceName: web-gateway-istio
+    namespace: default
+    port: 80
+    localPort: 8080

@@ -1,0 +1,15 @@
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-access-internal
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      type: internal
+  rules:
+    - from:
+        - source:
+            # web-external is denied
+            principals: ["example.org/ns/default/sa/web-external"]
+  action: DENY
