@@ -1,0 +1,13 @@
+POST {{URL}}/kids_only
+
+{
+    "age": 2
+}
+
+### Not kid
+
+POST {{URL}}/kids_only
+
+{
+    "age": 25
+}
