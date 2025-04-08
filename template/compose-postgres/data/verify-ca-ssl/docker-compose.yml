@@ -1,0 +1,31 @@
+services:
+  postgres-certs:
+    image: postgres:17
+    volumes:
+      - ../verify-ca-ssl/certs:/certs:ro
+      - certs:/certs-out
+    restart: no
+    command:
+      - sh
+      - -c
+      - |
+        cp /certs/* /certs-out/
+        chown postgres:postgres /certs-out/server.key
+        chmod 600 /certs-out/server.key
+        ls -l /certs-out
+  postgres:
+    volumes:
+      - ../verify-ca-ssl/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+      - ../verify-ca-ssl/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro
+      - certs:/certs
+    depends_on:
+      - postgres-certs
+    command:
+      - postgres
+      - -c
+      - config_file=/etc/postgresql/postgresql.conf
+      - -c
+      - hba_file=/etc/postgresql/pg_hba.conf
+
+volumes:
+  certs:
