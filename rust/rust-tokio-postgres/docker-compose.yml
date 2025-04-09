@@ -1,0 +1,42 @@
+services:
+  postgres-certs:
+    image: postgres:17
+    volumes:
+      - ./data/certs:/certs:ro
+      - certs:/certs-out
+    restart: no
+    command:
+      - sh
+      - -c
+      - |
+        cp /certs/* /certs-out/
+        chown postgres:postgres /certs-out/server.key
+        chmod 600 /certs-out/server.key
+        ls -l /certs-out
+
+  postgres:
+    image: postgres:17
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: password
+    healthcheck:
+      test: pg_isready
+      interval: 10s
+      retries: 30
+      timeout: 2s
+    depends_on:
+      - postgres-certs
+    volumes:
+      - ./data/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+      - postgres_data:/var/lib/postgresql/data
+      - certs:/certs
+    command:
+      - postgres
+      - -c
+      - config_file=/etc/postgresql/postgresql.conf
+
+volumes:
+  postgres_data:
+  certs:
