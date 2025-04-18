@@ -1,0 +1,17 @@
+<html>
+  <head>
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type"/>
+  </head>
+  <body>
+    <script type="module">
+      import init, {rust_sum} from './pkg/wasm_web.js';
+
+      async function run() {
+        await init();
+        console.log(rust_sum(3,5));
+      }
+
+      run();
+    </script>
+  </body>
+</html>
