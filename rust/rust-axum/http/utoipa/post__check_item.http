@@ -1,0 +1,6 @@
+POST {{URL}}/check_item
+
+{
+    "id": 1,
+    "name": "flower"
+}

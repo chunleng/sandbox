@@ -34,3 +34,13 @@ This one for adding a custom validation to the request object.
 cargo run --examples=custom-validation
 curl -i -X POST http://localhost:3000/kids_only -H "Content-Type: application/json" -d '{"age":12}'
 ```
+
+### `utoipa` Implementation
+
+For how to use the `utoipa` crate to generate OpenAPI specifications.
+
+```bash
+cargo run --examples=utoipa
+curl -i http://localhost:3000/buy -H "Content-Type: application/json" -d '{"id":1,"name":"flower"}'
+curl -i http://localhost:3000/check_item -H "Content-Type: application/json" -d '{"id":1,"name":"flower"}'
+```

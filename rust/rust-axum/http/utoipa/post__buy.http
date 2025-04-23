@@ -1,0 +1,6 @@
+POST {{URL}}/buy
+
+{
+    "id": 1,
+    "name": "flower"
+}
