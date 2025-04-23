@@ -8,6 +8,8 @@ Working
 
 ## Getting Started
 
+### Streaming API
+
 This tries out how streaming work in axum and you can try out using the
 following code.
 
@@ -18,7 +20,17 @@ curl -N -i "localhost:3000/stream_numbers?end=10"
 curl -N --http2-prior-knowledge -i "localhost:3000/stream_numbers?end=10"
 curl -N -i localhost:3000/stream_names
 curl -N --http2-prior-knowledge -i localhost:3000/stream_names
+
 ```
 
 The above demo both way of using a streaming library and using tokio channel to
 achieve the similar operations.
+
+### Custom Validation
+
+This one for adding a custom validation to the request object.
+
+```bash
+cargo run --examples=custom-validation
+curl -i -X POST http://localhost:3000/kids_only -H "Content-Type: application/json" -d '{"age":12}'
+```
