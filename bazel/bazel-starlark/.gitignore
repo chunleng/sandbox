@@ -1,0 +1,5 @@
+# Bazel ignores
+bazel-*
+
+# Output of tests
+/out
