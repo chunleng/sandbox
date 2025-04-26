@@ -1,0 +1,17 @@
+<html>
+  <head>
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type"/>
+  </head>
+  <body>
+    <script src='./pkg/wasm_web_worker.js'></script>
+    <script>
+      const {startup} = wasm_bindgen;
+      async function run() {
+        await wasm_bindgen();
+        startup();
+      }
+
+      run();
+    </script>
+  </body>
+</html>

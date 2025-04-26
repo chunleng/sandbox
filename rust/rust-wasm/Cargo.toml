@@ -2,5 +2,6 @@
 
 resolver = "2"
 members = [
-    "app/web"
+    "app/web",
+    "app/web_worker"
 ]

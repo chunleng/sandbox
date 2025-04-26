@@ -27,5 +27,9 @@ For each project, it can be run with the following command:
 ```bash
 # With no bundler
 env -C app/web wasm-pack build --target web
-miniserve ./app/web --index index.html -p 8080 # http://localhost:8080
+miniserve ./app/web --header "Cache-Control:no-cache" --index index.html -p 8080 # http://localhost:8080
+
+# With web worker
+env -C app/web_worker wasm-pack build --target no-modules
+miniserve ./app/web_worker/ --header "Cache-Control:no-cache" --index index.html -p 8080 # http://localhost:8080
 ```
