@@ -18,7 +18,15 @@ cargo install dioxus-cli
 
 # To activate tailwindcss
 npx tailwindcss@3 -i ./input.css -o ./assets/tailwind.css --watch
+
+# example for layout
 dx serve --example layout --target web
+
+# example for state
+dx serve --example state --target web
+
+# example for webworker
+dx serve --example web_worker --target web
 ```
 
 ## Note
