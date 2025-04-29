@@ -3,5 +3,6 @@
 resolver = "2"
 members = [
     "app/web",
-    "app/web_worker"
+    "app/web_worker",
+    "app/sqlite"
 ]
