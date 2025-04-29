@@ -11,3 +11,6 @@
 
 # Javascript related modules
 /node_modules
+
+# This is output from rust-wasm's sqlite wasm module
+/static/sqlite
