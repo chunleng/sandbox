@@ -11,3 +11,10 @@ spec:
         - name: frontend
           image: dev_container
           command: ["cargo", "watch", "--", "cargo", "run", "-p", "frontend"]
+          volumeMounts:
+            - mountPath: /builder/target
+              name: target-volume
+      volumes:
+        - name: target-volume
+          hostPath:
+            path: /data/skaffold-test/frontend-target
