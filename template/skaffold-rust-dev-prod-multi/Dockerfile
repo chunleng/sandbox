@@ -10,7 +10,7 @@ RUN mkdir -p app/backend/src && touch app/backend/src/lib.rs && \
     rm app/backend/src/lib.rs && \
     rm app/frontend/src/lib.rs
 
-FROM builder_base AS dev_dependencies
+FROM rust:1.83.0-bookworm AS dev_dependencies
 RUN cargo install cargo-watch --version 8.5.3 --locked
 
 FROM builder_base AS dev
