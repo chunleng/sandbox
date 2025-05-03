@@ -1,4 +1,5 @@
 use dioxus::prelude::*;
+use sqlite::SqliteExecutor;
 
 const TAILWIND_CSS: Asset = asset!("/assets/tailwind.css");
 
@@ -8,41 +9,57 @@ fn main() {
 
 #[component]
 fn App() -> Element {
-    let sqlite = use_sqlite();
+    let (value, mut action) = use_sqlite_action(|| SqliteExecutor::new());
     rsx! {
         document::Link { rel: "stylesheet", href: TAILWIND_CSS }
-        button {
-            onclick: move |_| {
-                sqlite.execute();
-            },
-            "Send Event"
-        }
+        button { onclick: move |_| { action() }, "Send Event" }
+        br {}
+        "Returned result: "
+        {value.read().clone().unwrap_or("None".to_string())}
     }
 }
 
-trait SqliteHandler {
-    fn execute(&self);
+trait SqliteAction {
+    type ReturnType;
+
+    fn get(&self) -> Option<Self::ReturnType>;
+    async fn execute(&mut self);
 }
 
 #[cfg(target_family = "wasm")]
 mod sqlite {
+    use std::cell::RefCell;
+    use std::rc::Rc;
+    use std::sync::mpsc;
+    use std::sync::mpsc::Receiver;
+    use std::time::Duration;
+
+    use async_std::task::sleep;
     use dioxus::logger::tracing::info;
     use dioxus::prelude::*;
+    use serde::Deserialize;
     use wasm_bindgen::prelude::*;
     use web_sys::MessageEvent;
     use web_sys::Worker;
     use web_sys::{WorkerOptions, WorkerType};
 
-    use super::SqliteHandler;
+    use super::SqliteAction;
 
     const WORKER_JS: Asset = asset!(
         "/assets/sqlite.js",
         JsAssetOptions::new().with_minify(false) // dioxus minify does not work well with JS module files
     );
 
-    #[derive(Clone)]
+    #[derive(Debug)]
     pub struct SqliteExecutor {
+        result: Rc<RefCell<Option<String>>>,
         worker: Worker,
+        rx: Receiver<()>,
+    }
+
+    #[derive(Deserialize)]
+    struct Cnt {
+        count: String,
     }
 
     impl SqliteExecutor {
@@ -50,21 +67,50 @@ mod sqlite {
             let worker_options = WorkerOptions::new();
             worker_options.set_type(WorkerType::Module);
             let worker = Worker::new_with_options(&WORKER_JS.to_string(), &worker_options).unwrap();
+            let (tx, rx) = mpsc::channel();
+
+            let self_ = Self {
+                result: Rc::new(RefCell::new(None)),
+                worker,
+                rx,
+            };
+
+            let result_binding = self_.result.clone();
 
             let onmessage: Closure<dyn FnMut(MessageEvent)> =
                 Closure::wrap(Box::new(move |event: MessageEvent| {
+                    let mut r = result_binding.borrow_mut();
+                    *r = Some(
+                        serde_wasm_bindgen::from_value::<Cnt>(event.data())
+                            .unwrap()
+                            .count,
+                    );
+                    tx.send(()).unwrap();
                     info!("Message received: {:?}", event.data());
                 }));
-            worker.set_onmessage(Some(&onmessage.as_ref().unchecked_ref()));
+            self_
+                .worker
+                .set_onmessage(Some(&onmessage.as_ref().unchecked_ref()));
 
             // This closure ownership now belongs to JS
             onmessage.forget();
-            Self { worker }
+            self_
         }
     }
-    impl SqliteHandler for SqliteExecutor {
-        fn execute(&self) {
+    impl SqliteAction for SqliteExecutor {
+        type ReturnType = String;
+
+        fn get(&self) -> Option<Self::ReturnType> {
+            self.result.borrow().clone()
+        }
+        async fn execute(&mut self) {
             self.worker.post_message(&"Init DB".into()).unwrap();
+
+            // Because this is blocking, I use sleep here to make sure that processing is given to
+            // another process using try_recv and sleep
+            while let Err(_) = self.rx.try_recv() {
+                sleep(Duration::from_millis(10)).await;
+            }
         }
     }
 }
@@ -78,7 +124,7 @@ mod sqlite {
     use diesel::prelude::*;
     use dioxus::logger::tracing::info;
 
-    use super::SqliteHandler;
+    use super::SqliteAction;
 
     table! {
         dummy (id) {
@@ -89,6 +135,7 @@ mod sqlite {
     #[derive(Clone)]
     pub struct SqliteExecutor {
         conn: Rc<RefCell<SqliteConnection>>,
+        result: Option<String>,
     }
 
     // ref: https://github.com/DioxusLabs/dioxus/discussions/3475#discussioncomment-11713062
@@ -131,12 +178,17 @@ mod sqlite {
 
             Self {
                 conn: Rc::new(RefCell::new(SqliteConnection::establish(&db_path).unwrap())),
+                result: None,
             }
         }
     }
 
-    impl SqliteHandler for SqliteExecutor {
-        fn execute(&self) {
+    impl SqliteAction for SqliteExecutor {
+        type ReturnType = String;
+        fn get(&self) -> Option<Self::ReturnType> {
+            self.result.clone()
+        }
+        async fn execute(&mut self) {
             let conn = &mut *self.conn.borrow_mut();
             diesel::sql_query("CREATE TABLE IF NOT EXISTS dummy ( id SERIAL PRIMARY KEY)")
                 .execute(conn)
@@ -150,10 +202,28 @@ mod sqlite {
             let res: i64 = dummy.select(count_star()).first(conn).unwrap();
 
             info!("{}", res.to_string());
+            self.result = Some(res.to_string());
         }
     }
 }
 
-fn use_sqlite() -> impl SqliteHandler {
-    use_hook(|| sqlite::SqliteExecutor::new())
+fn use_sqlite_action<T, U>(action: impl FnOnce() -> T) -> (Signal<Option<U>>, Box<dyn FnMut()>)
+where
+    // TODO think about how to remove this 'static. There are some problem related to async trait
+    // that needs to be resolved but however, I cannot replace Rc with a Sync Arc because of
+    // closure.
+    T: SqliteAction<ReturnType = U> + 'static,
+{
+    let mut value = use_signal(|| None::<U>);
+    let mut sqlite = use_signal(action);
+    (
+        value,
+        Box::new(move || {
+            spawn(async move {
+                let mut sqlite = sqlite.write();
+                sqlite.execute().await;
+                value.set(sqlite.get());
+            });
+        }),
+    )
 }
