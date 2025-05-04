@@ -1,5 +1,12 @@
+use std::{
+    fmt::Debug,
+    future::Future,
+    sync::{Arc, Mutex},
+};
+
 use dioxus::prelude::*;
 use sqlite::SqliteExecutor;
+use tokio::sync::mpsc;
 
 const TAILWIND_CSS: Asset = asset!("/assets/tailwind.css");
 
@@ -15,7 +22,7 @@ fn App() -> Element {
         button { onclick: move |_| { action() }, "Send Event" }
         br {}
         "Returned result: "
-        {value.read().clone().unwrap_or("None".to_string())}
+        SuspenseBoundary { fallback: |_| rsx! { "Loading" }, {value} }
     }
 }
 
@@ -207,23 +214,82 @@ mod sqlite {
     }
 }
 
-fn use_sqlite_action<T, U>(action: impl FnOnce() -> T) -> (Signal<Option<U>>, Box<dyn FnMut()>)
+// Suspense does not react when using restart in 0.6.3, as it does not trigger the status in the
+// use_resource.
+//
+// The following PR will resolve this issue
+// https://github.com/DioxusLabs/dioxus/issues/2812
+fn use_sqlite_action<T, U: Debug>(action: impl FnOnce() -> T) -> (Element, Box<dyn FnMut()>)
 where
     // TODO think about how to remove this 'static. There are some problem related to async trait
     // that needs to be resolved but however, I cannot replace Rc with a Sync Arc because of
     // closure.
     T: SqliteAction<ReturnType = U> + 'static,
 {
-    let mut value = use_signal(|| None::<U>);
-    let mut sqlite = use_signal(action);
+    let sqlite = use_signal(action);
+    let (call, action) = use_action(move || {
+        let mut sqlite = sqlite;
+        async move {
+            let mut sqlite = sqlite.write();
+            sqlite.execute().await;
+        }
+    });
     (
-        value,
-        Box::new(move || {
-            spawn(async move {
-                let mut sqlite = sqlite.write();
-                sqlite.execute().await;
-                value.set(sqlite.get());
-            });
-        }),
+        rsx! {
+            SqliteValueSuspense { value: format!("{:?}", sqlite.read().get()), fetcher: action }
+        },
+        Box::new(call),
     )
+}
+
+/// Dioxus does not have a use_action so this is temporarily filling in for the lack of function.
+///
+/// It returns a function that can be executed and a resource to track the state of execution.
+fn use_action<F>(
+    action_to_perform: impl FnMut() -> F + 'static,
+) -> (impl FnMut() -> (), Resource<()>)
+where
+    F: Future<Output = ()> + 'static,
+{
+    let (tx, rx) = use_hook(|| {
+        let (tx, rx) = mpsc::channel(10);
+        (tx, Arc::new(Mutex::new(rx)))
+    });
+    let mut suspending_resource = use_resource(move || {
+        let rx = rx.clone();
+        async move {
+            rx.lock().unwrap().recv().await;
+        }
+    });
+    let tx2 = tx.clone();
+    spawn(async move {
+        let _ = tx2.send(()).await;
+    });
+    let action = Arc::new(Mutex::new(action_to_perform));
+    (
+        move || {
+            let tx = tx.clone();
+            let action = action.clone();
+            spawn(async move {
+                suspending_resource.restart();
+                let action_to_perform = action.lock();
+                if let Ok(mut action) = action_to_perform {
+                    action().await;
+                }
+                let _ = tx.send(()).await;
+            });
+        },
+        suspending_resource,
+    )
+}
+
+// Seems like suspense work on components only. I have no idea how to resolve this so I am just
+// going to create one for triggering suspense.
+#[component]
+fn SqliteValueSuspense(value: String, fetcher: Resource<()>) -> Element {
+    fetcher.suspend()?;
+
+    rsx! {
+        {value}
+    }
 }

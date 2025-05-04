@@ -3726,6 +3726,7 @@ dependencies = [
  "libsqlite3-sys",
  "serde",
  "serde-wasm-bindgen 0.6.5",
+ "tokio",
  "wasm-bindgen",
  "web-sys",
 ]
