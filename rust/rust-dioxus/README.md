@@ -36,6 +36,10 @@ dx serve --example web_worker --target web
 # example for wasm sqlite
 env -C ../rust-wasm/app/sqlite wasm-pack build --target web --release --out-dir ../../../rust-dioxus/static/sqlite/
 dx serve --example wasm_sqlite --target web/desktop/ios/android
+
+# example for use_action
+# This is a temporary workaround for https://github.com/DioxusLabs/dioxus/pull/3617
+dx serve --example use_action --target web
 ```
 
 ## Note

@@ -261,9 +261,11 @@ where
             rx.lock().unwrap().recv().await;
         }
     });
-    let tx2 = tx.clone();
-    spawn(async move {
-        let _ = tx2.send(()).await;
+    let tx_clone = tx.clone();
+    use_hook(move || {
+        spawn(async move {
+            let _ = tx_clone.send(()).await;
+        })
     });
     let action = Arc::new(Mutex::new(action_to_perform));
     (
