@@ -37,10 +37,15 @@ curl -i -X POST http://localhost:3000/kids_only -H "Content-Type: application/js
 
 ### `utoipa` Implementation
 
-For how to use the `utoipa` crate to generate OpenAPI specifications.
+For how to use the `utoipa` crate to generate OpenAPI specifications. There is
+another example using `utoipa-axum` which autobinds the endpoint to utoipa
 
 ```bash
 cargo run --examples=utoipa
+cargo run --example=utoipa-axum
+
+# To query:
 curl -i http://localhost:3000/buy -H "Content-Type: application/json" -d '{"id":1,"name":"flower"}'
 curl -i http://localhost:3000/check_item -H "Content-Type: application/json" -d '{"id":1,"name":"flower"}'
+
 ```

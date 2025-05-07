@@ -11,3 +11,4 @@ serde = { version = "1.0.219", features = ["derive"] }
 tokio = { version = "1.44.1", features = ["full"] }
 tokio-stream = "0.1.17"
 utoipa = "5"
+utoipa-axum = "0.2.0"
