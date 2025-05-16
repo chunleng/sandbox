@@ -1,12 +1,7 @@
-use std::{
-    fmt::Debug,
-    future::Future,
-    sync::{Arc, Mutex},
-};
+use std::{fmt::Debug, future::Future};
 
 use dioxus::prelude::*;
 use sqlite::SqliteExecutor;
-use tokio::sync::mpsc;
 
 const TAILWIND_CSS: Asset = asset!("/assets/tailwind.css");
 
@@ -19,7 +14,7 @@ fn App() -> Element {
     let (value, mut action) = use_sqlite_action(|| SqliteExecutor::new());
     rsx! {
         document::Link { rel: "stylesheet", href: TAILWIND_CSS }
-        button { onclick: move |_| { action() }, "Send Event" }
+        button { onclick: move |_| { action.restart() }, "Send Event" }
         br {}
         "Returned result: "
         SuspenseBoundary { fallback: |_| rsx! { "Loading" }, {value} }
@@ -219,7 +214,7 @@ mod sqlite {
 //
 // The following PR will resolve this issue
 // https://github.com/DioxusLabs/dioxus/issues/2812
-fn use_sqlite_action<T, U: Debug>(action: impl FnOnce() -> T) -> (Element, Box<dyn FnMut()>)
+fn use_sqlite_action<T, U: Debug>(action: impl FnOnce() -> T) -> (Element, Resource<()>)
 where
     // TODO think about how to remove this 'static. There are some problem related to async trait
     // that needs to be resolved but however, I cannot replace Rc with a Sync Arc because of
@@ -227,62 +222,48 @@ where
     T: SqliteAction<ReturnType = U> + 'static,
 {
     let sqlite = use_signal(action);
-    let (call, action) = use_action(move || {
-        let mut sqlite = sqlite;
-        async move {
-            let mut sqlite = sqlite.write();
-            sqlite.execute().await;
-        }
-    });
+    let action = use_action(
+        move || {
+            let mut sqlite = sqlite;
+            async move {
+                let mut sqlite = sqlite.write();
+                sqlite.execute().await;
+            }
+        },
+        (),
+    );
     (
         rsx! {
             SqliteValueSuspense { value: format!("{:?}", sqlite.read().get()), fetcher: action }
         },
-        Box::new(call),
+        action,
     )
 }
 
 /// Dioxus does not have a use_action so this is temporarily filling in for the lack of function.
 ///
 /// It returns a function that can be executed and a resource to track the state of execution.
-fn use_action<F>(
-    action_to_perform: impl FnMut() -> F + 'static,
-) -> (impl FnMut() -> (), Resource<()>)
+fn use_action<F, T>(future: impl FnMut() -> F + 'static, default_value: T) -> Resource<T>
 where
-    F: Future<Output = ()> + 'static,
+    F: Future<Output = T> + 'static,
+    T: ToOwned<Owned = T> + 'static,
 {
-    let (tx, rx) = use_hook(|| {
-        let (tx, rx) = mpsc::channel(10);
-        (tx, Arc::new(Mutex::new(rx)))
-    });
-    let mut suspending_resource = use_resource(move || {
-        let rx = rx.clone();
-        async move {
-            rx.lock().unwrap().recv().await;
-        }
-    });
-    let tx_clone = tx.clone();
-    use_hook(move || {
-        spawn(async move {
-            let _ = tx_clone.send(()).await;
-        })
-    });
-    let action = Arc::new(Mutex::new(action_to_perform));
-    (
+    let mut first_run = use_signal(|| true);
+    let mut future = use_signal(|| future);
+
+    use_resource({
         move || {
-            let tx = tx.clone();
-            let action = action.clone();
-            spawn(async move {
-                suspending_resource.restart();
-                let action_to_perform = action.lock();
-                if let Ok(mut action) = action_to_perform {
-                    action().await;
+            let default_value = default_value.to_owned();
+            async move {
+                if *first_run.peek() {
+                    first_run.set(false);
+                    default_value
+                } else {
+                    future.with_mut(|x| x()).await
                 }
-                let _ = tx.send(()).await;
-            });
-        },
-        suspending_resource,
-    )
+            }
+        }
+    })
 }
 
 // Seems like suspense work on components only. I have no idea how to resolve this so I am just
