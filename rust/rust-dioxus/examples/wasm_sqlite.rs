@@ -11,13 +11,15 @@ fn main() {
 
 #[component]
 fn App() -> Element {
-    let (value, mut action) = use_sqlite_action(|| SqliteExecutor::new());
+    let (sqlite, mut action) = use_sqlite_action(|| SqliteExecutor::new());
     rsx! {
         document::Link { rel: "stylesheet", href: TAILWIND_CSS }
         button { onclick: move |_| { action.restart() }, "Send Event" }
         br {}
         "Returned result: "
-        SuspenseBoundary { fallback: |_| rsx! { "Loading" }, {value} }
+        SuspenseBoundary { fallback: |_| rsx! { "Loading" },
+            SqliteValueSuspense { sqlite, action }
+        }
     }
 }
 
@@ -214,7 +216,7 @@ mod sqlite {
 //
 // The following PR will resolve this issue
 // https://github.com/DioxusLabs/dioxus/issues/2812
-fn use_sqlite_action<T, U: Debug>(action: impl FnOnce() -> T) -> (Element, Resource<()>)
+fn use_sqlite_action<T, U: Debug>(action: impl FnOnce() -> T) -> (Signal<T>, Resource<()>)
 where
     // TODO think about how to remove this 'static. There are some problem related to async trait
     // that needs to be resolved but however, I cannot replace Rc with a Sync Arc because of
@@ -232,12 +234,7 @@ where
         },
         (),
     );
-    (
-        rsx! {
-            SqliteValueSuspense { value: format!("{:?}", sqlite.read().get()), fetcher: action }
-        },
-        action,
-    )
+    (sqlite, action)
 }
 
 /// Dioxus does not have a use_action so this is temporarily filling in for the lack of function.
@@ -269,10 +266,10 @@ where
 // Seems like suspense work on components only. I have no idea how to resolve this so I am just
 // going to create one for triggering suspense.
 #[component]
-fn SqliteValueSuspense(value: String, fetcher: Resource<()>) -> Element {
-    fetcher.suspend()?;
+fn SqliteValueSuspense(sqlite: Signal<SqliteExecutor>, action: Resource<()>) -> Element {
+    action.suspend()?;
 
     rsx! {
-        {value}
+        {sqlite.read().get()}
     }
 }
