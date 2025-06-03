@@ -1,0 +1,30 @@
+services:
+  minio:
+    image: minio/minio:latest
+    ports:
+      - 9000:9000 # MinIO
+      - 9001:9001 # Console
+    command: ["server", "/data", "--console-address", ":9001"]
+    volumes:
+      - minio_volume:/data
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: password
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/ready"]
+      interval: 1s
+      timeout: 2s
+      retries: 10
+
+  mc:
+    image: minio/mc:latest
+    entrypoint: ["bash", "/entrypoint.sh"]
+    volumes:
+      - ./entrypoint.sh:/entrypoint.sh
+    depends_on:
+      minio:
+        condition: service_healthy
+    restart: no
+
+volumes:
+  minio_volume:
