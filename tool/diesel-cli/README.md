@@ -10,7 +10,8 @@ Working
 
 ```bash
 MIGRATION_PATH="/path/to/folder" DATABASE_URL="postgres://postgres:password@localhost:5432/postgres" docker-compose run --rm diesel-cli migration run
-MIGRATION_PATH="/path/to/folder" docker-compose run --rm diesel-cli migration generate [test]
+MIGRATION_PATH="/Users/chunlenglim/Documents/ggg/taskmunch/app/frontend/db" DATABASE_URL="sqlite:///Users/chunlenglim/Documents/ggg/taskmunch/app/frontend/db/test.db" docker-compose run --rm diesel-cli migration run
+MIGRATION_PATH="/Users/chunlenglim/Documents/ggg/taskmunch/app/frontend/db" docker-compose run --rm diesel-cli migration generate "create_tasks"
 ```
 
 Note that for migration path, it should point to the folder that contains the
