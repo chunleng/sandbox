@@ -15,6 +15,12 @@ To run,
 cargo run
 ```
 
+To debug the output, we can use the `cargo-expand` crate.
+
+```bash
+cargo expand -p app
+```
+
 ## Note
 
 - Did not manage to get the logic for compiling instruction right, and it does
