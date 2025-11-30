@@ -1,0 +1,4 @@
+url: https://docs.maestro.dev
+---
+- launchApp
+- tapOn: "Ask or search…"

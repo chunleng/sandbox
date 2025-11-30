@@ -1,0 +1,4 @@
+appId: com.google.android.contacts
+---
+- launchApp
+- tapOn: "Search contacts"
