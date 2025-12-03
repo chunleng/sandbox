@@ -1,0 +1,33 @@
+### 
+
+@sessionId = {{CREATE_SESSION.response.body.$.value.sessionId}}
+
+
+### CREATE_SESSION
+
+POST {{URL}}/session HTTP/1.1
+
+{
+  "capabilities": {
+    "alwaysMatch": {
+      "appium:automationName": "Chromium",
+      "appium:browserName": "chrome",
+      "appium:newCommandTimeout": 300,
+      "platformName": "mac"
+    }
+  }
+}
+
+
+### 
+
+POST {{URL}}/session/{{sessionId}}/url HTTP/1.1
+
+{
+  "url": "https://example.com"
+}
+
+
+### 
+
+GET {{URL}}/session/{{sessionId}}/title HTTP/1.1
