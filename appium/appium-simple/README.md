@@ -24,8 +24,8 @@ As the default Appium does not come preinstalled with driver, we can do the
 following to install the necessary drivers.
 
 ```bash
-# Android (WIP)
-# npx appium@3.1.1 driver install uiautomator2@6.6.1
+# Android
+npx appium@3.1.1 driver install uiautomator2@6.6.1
 
 # iOS/tvOS (WIP)
 # npx appium@3.1.1 driver install xcuitest@10.9.0

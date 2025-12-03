@@ -1,0 +1,41 @@
+### 
+
+@sessionId = {{CREATE_SESSION.response.body.$.value.sessionId}}
+
+
+### CREATE_SESSION
+
+POST {{URL}}/session HTTP/1.1
+
+{
+  "capabilities": {
+    "alwaysMatch": {
+      "appium:appPackage": "com.google.android.contacts",
+      "appium:automationName": "UiAutomator2",
+      "appium:deviceName": "Medium_Phone_API_36",
+      "platformName": "Android"
+    }
+  }
+}
+
+
+### GET_BUTTON_ADD
+
+POST {{URL}}/session/{{sessionId}}/element HTTP/1.1
+
+{
+  "using": "accessibility id",
+  "value": "Create contact"
+}
+
+
+### 
+
+POST {{URL}}/session/{{sessionId}}/element/{{GET_BUTTON_ADD.response.body.$.value.ELEMENT}}/click HTTP/1.1
+
+{}
+
+
+### DELETE SESSION
+
+DELETE {{URL}}/session/{{sessionId}} HTTP/1.1
