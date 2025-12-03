@@ -30,8 +30,8 @@ following to install the necessary drivers.
 # iOS/tvOS (WIP)
 # npx appium@3.1.1 driver install xcuitest@10.9.0
 
-# Mac (WIP)
-# npx appium@3.1.1 driver install mac2@3.2.8
+# Mac
+npx appium@3.1.1 driver install mac2@3.2.8
 
 # Chromuim
 npx appium@3.1.1 driver install chromium@2.0.3

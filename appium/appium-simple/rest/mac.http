@@ -1,0 +1,41 @@
+### 
+
+@sessionId = {{CREATE_SESSION.response.body.$.value.sessionId}}
+
+
+### CREATE_SESSION
+
+POST {{URL}}/session HTTP/1.1
+
+{
+  "capabilities": {
+    "alwaysMatch": {
+      "appium:automationName": "Mac2",
+      "appium:bundleId": "com.apple.calculator",
+      "appium:newCommandTimeout": 300,
+      "platformName": "mac"
+    }
+  }
+}
+
+
+### GET_BUTTON_0
+
+POST {{URL}}/session/{{sessionId}}/element HTTP/1.1
+
+{
+  "using": "id",
+  "value": "Zero"
+}
+
+
+### 
+
+POST {{URL}}/session/{{sessionId}}/element/{{GET_BUTTON_0.response.body.$.value.ELEMENT}}/click HTTP/1.1
+
+{}
+
+
+### DELETE SESSION
+
+DELETE {{URL}}/session/{{sessionId}} HTTP/1.1
