@@ -1,0 +1,19 @@
+[package]
+name = "rust-appium"
+version = "0.1.0"
+authors = ["Lim Chun Leng <limchunleng@gmail.com>"]
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+dioxus = { version = "0.7.1", features = [] }
+
+[dev-dependencies]
+appium-client = "0.2.2"
+
+[features]
+default = ["web"]
+web = ["dioxus/web"]
+desktop = ["dioxus/desktop"]
+mobile = ["dioxus/mobile"]
