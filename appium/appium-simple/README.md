@@ -27,8 +27,8 @@ following to install the necessary drivers.
 # Android
 npx appium@3.1.1 driver install uiautomator2@6.6.1
 
-# iOS/tvOS (WIP)
-# npx appium@3.1.1 driver install xcuitest@10.9.0
+# iOS/tvOS
+npx appium@3.1.1 driver install xcuitest@10.9.0
 
 # Mac
 npx appium@3.1.1 driver install mac2@3.2.8
@@ -52,3 +52,7 @@ npx appium@3.1.1 plugin install inspector@2025.11.1
   this sandbox, I simply use the latest driver with the latest chrome, maybe it
   will be easier to use/download a custom chromium binary and use
   `CHROMEDRIVER_VERSION` to fix the chromedriver for testing.
+- Every xcuitest version has its compatible iOS version that the test can be run
+  on. To find out the version compatible, use the command `npx appium@3.1.1
+  driver docter xcuitest`. In order to install the correct version of iOS, go to
+  `XCode > Settings > Components`

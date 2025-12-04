@@ -1,0 +1,43 @@
+### 
+
+@sessionId = {{CREATE_SESSION.response.body.$.value.sessionId}}
+
+
+### CREATE_SESSION
+
+POST {{URL}}/session HTTP/1.1
+
+{
+  "capabilities": {
+    "alwaysMatch": {
+      "appium:automationName": "XCUITest",
+      "appium:deviceName": "iPhone 16",
+      "appium:newCommandTimeout": 0,
+      "appium:platformVersion": "18.6",
+      "appium:bundleId": "com.apple.MobileAddressBook",
+      "platformName": "iOS"
+    }
+  }
+}
+
+
+### GET_BUTTON_ADD
+
+POST {{URL}}/session/{{sessionId}}/element HTTP/1.1
+
+{
+  "using": "accessibility id",
+  "value": "Add"
+}
+
+
+### 
+
+POST {{URL}}/session/{{sessionId}}/element/{{GET_BUTTON_ADD.response.body.$.value.ELEMENT}}/click HTTP/1.1
+
+{}
+
+
+### DELETE SESSION
+
+DELETE {{URL}}/session/{{sessionId}} HTTP/1.1
