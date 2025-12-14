@@ -5,11 +5,12 @@ iOS and Android.
 
 ## Status
 
-WIP
+Working
 
 ## Getting Started
 
-To run the server, use the following command:
+To run the server, use the following command after installing the plugin and
+drivers:
 
 ```bash
 npx appium@3.1.1 --allow-insecure "*:session_discovery" --use-plugins inspector
