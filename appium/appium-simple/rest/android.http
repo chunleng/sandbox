@@ -6,6 +6,19 @@
 ### CREATE_SESSION
 
 POST {{URL}}/session HTTP/1.1
+# Some other sensible capabilities
+# =================================
+# Auto install, launch and reset app.
+#     "appium:app": "path/to/app",
+#     "appium:enforceAppInstall": true,
+#     "appium:forceAppLaunch": true,
+#
+# Hybrid app (App that mainly uses webview for rendering. See
+# <https://github.com/appium/appium-uiautomator2-driver/blob/964672389bbe9e501958202904d23a9c86414fc9/README.md#hybrid-mode>)
+# Automatic allow appium to access to webview
+#     "appium:autoWebview": true,
+# In order to ensure webview is rendered properly in Appium, we must set the correct chromedriver
+#     "appium:chromedriverExecutable": "path/to/chromedriver",
 
 {
   "capabilities": {

@@ -6,6 +6,12 @@
 ### CREATE_SESSION
 
 POST {{URL}}/session HTTP/1.1
+# Some other sensible capabilities
+# =================================
+# Auto install, launch and reset app. Note that if the app with the same bundleId is already opened, Appium attempt to
+# test on that app as a result.
+#     "appium:bundleId": "app.example",
+#     "appium:appPath": "path/to/app",
 
 {
   "capabilities": {

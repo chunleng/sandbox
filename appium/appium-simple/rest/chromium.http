@@ -6,6 +6,28 @@
 ### CREATE_SESSION
 
 POST {{URL}}/session HTTP/1.1
+# Some other sensible capabilities
+# =================================
+# Pointing to the correct chromedriver for testing. This is especially useful when used with asdf to point to the
+# correct chromedriver
+#     "appium:executable": "~/.asdf/shims/chromedriver"
+#
+# Setting up chrome to headless can be useful for less disruptive testing of app.
+#     "goog:chromeOptions": {
+#       "args": ["--headless", "--window-size=800,600"],
+#     }
+#
+# For chrome binary, using <https://www.npmjs.com/package/@puppeteer/browsers> can be useful to create a stable
+# environment for testing. To set the correct binary to use, use the following capability:
+#     "goog:chromeOptions": {
+#       "binary": "path/to/chrome",
+#     }
+#
+# Also, chrome browser closes after some time when the session is closed. So, one way to prevent the browser from
+# closing is to detach it.
+#     "goog:chromeOptions": {
+#       "detach": true
+#     }
 
 {
   "capabilities": {

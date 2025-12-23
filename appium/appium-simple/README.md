@@ -57,3 +57,12 @@ npx appium@3.1.1 plugin install inspector@2025.11.1
   on. To find out the version compatible, use the command `npx appium@3.1.1
   driver docter xcuitest`. In order to install the correct version of iOS, go to
   `XCode > Settings > Components`
+- Sensible setup (Especially when using Dioxus):
+  * Android, MacOS and Chrome: Added comments in the respective
+    [rest/*.http](./rest) for some options that can help with App testing on the
+    developed app.
+  * iOS: Forgot the reason, but App installation did not go too well with iOS
+    XCUItest driver. Found out that I could instead use the following setup:
+    + Manually install the app by using `xcrun simctl install <device_name>
+      <app_path>`
+    + Set `appium:bundleId` so that the App restarts properly between sessions.
