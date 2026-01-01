@@ -23,7 +23,7 @@ services:
   electric:
     image: electricsql/electric:1.0.0-beta.18
     environment:
-      DATABASE_URL: postgresql://postgres:password@postgres:5432/demo?sslmode=disable
+      DATABASE_URL: postgresql://postgres:password@postgres:5432?sslmode=disable
       ELECTRIC_REPLICATION_STREAM_ID: b
     ports:
       - 3000:3000
@@ -33,7 +33,7 @@ services:
   electric2:
     image: electricsql/electric:1.0.0-beta.18
     environment:
-      DATABASE_URL: postgresql://postgres:password@postgres:5432/demo?sslmode=disable
+      DATABASE_URL: postgresql://postgres:password@postgres:5432?sslmode=disable
       ELECTRIC_REPLICATION_STREAM_ID: a
     ports:
       - 3001:3000
