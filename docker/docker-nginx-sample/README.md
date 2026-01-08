@@ -8,8 +8,6 @@ Working
 
 ## Getting Started
 
-Change the `TARGET_REPO` in [`Makefile`](./Makefile) and we are ready to go!
-
 ```bash
 # Build and deploy to TARGET_REPO
 make
