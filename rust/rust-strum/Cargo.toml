@@ -1,0 +1,8 @@
+[package]
+name = "rust-strum"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+anyhow = "1.0.100"
+strum = { version = "0.27.2", features = ["derive"] }
