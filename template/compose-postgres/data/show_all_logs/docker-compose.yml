@@ -1,0 +1,8 @@
+services:
+  postgres:
+    volumes:
+      - ../show_all_logs/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+    command:
+      - postgres
+      - -c
+      - log_statement=all
