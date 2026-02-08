@@ -1,0 +1,10 @@
+[workspace]
+
+resolver = "2"
+members = ["client", "server", "service"]
+
+[workspace.dependencies]
+service = { path = "service" }
+tarpc = { version = "0.37.0", features = ["serde-transport-bincode", "tcp"] }
+tokio = { version = "1.49.0", features = ["full"] }
+futures = "0.3.31"
