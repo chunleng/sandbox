@@ -1,0 +1,19 @@
+[package]
+name = "rust-simd"
+version = "0.1.0"
+edition = "2024"
+
+[features]
+simd = []
+
+[dependencies]
+
+[dev-dependencies]
+criterion = "0.5"
+
+[[bench]]
+name = "add"
+harness = false
+
+[profile.release]
+opt-level = 1
