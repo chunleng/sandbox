@@ -5,7 +5,9 @@ use diesel_async::{
     AsyncPgConnection,
 };
 
-pub fn create_pool(database_url: &str) -> Result<Pool<AsyncPgConnection>, deadpool::managed::BuildError> {
+pub fn create_pool(
+    database_url: &str,
+) -> Result<Pool<AsyncPgConnection>, deadpool::managed::BuildError> {
     let config = AsyncDieselConnectionManager::<AsyncPgConnection>::new(database_url);
     Pool::builder(config).build()
 }

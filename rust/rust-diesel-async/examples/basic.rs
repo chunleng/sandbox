@@ -2,9 +2,12 @@ use std::error::Error;
 
 use diesel::{insert_into, prelude::*};
 use diesel_async::RunQueryDsl;
-use rust_diesel_async::{create_pool, gen::schema::employees::{dsl as employee_col, dsl::employees}};
+use rust_diesel_async::{
+    create_pool,
+    gen::schema::employees::{dsl as employee_col, dsl::employees},
+};
 
-#[derive(Queryable, Debug)]
+#[derive(Queryable, Debug, Selectable)]
 #[diesel(table_name = rust_diesel_async::gen::schema::employees)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 struct Employee {
@@ -24,6 +27,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .await?;
 
     let employees_older_than_10: Vec<Employee> = employees
+        .select(Employee::as_select())
         .filter(employee_col::age.gt(10))
         .load(&mut connection)
         .await?;

@@ -1,0 +1,2 @@
+ALTER TABLE employees ADD COLUMN role VARCHAR(255) DEFAULT 'staff';
+ALTER TABLE employees ADD COLUMN status VARCHAR(50) NOT NULL DEFAULT 'active';
