@@ -4,7 +4,7 @@ Testing how the `diesel-async` crate works.
 
 ## Status
 
-WIP
+Working
 
 ## Getting Started
 
@@ -12,8 +12,8 @@ WIP
 # Startup a Postgres server
 docker-compose up
 
-# Run the code
-cargo run
+# Run an example
+cargo run --example basic
 ```
 
 While the Postgres database is up, we can use the tools provided by `diesel-cli`

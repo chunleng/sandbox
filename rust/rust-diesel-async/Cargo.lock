@@ -632,6 +632,7 @@ dependencies = [
 name = "rust-diesel-async"
 version = "0.1.0"
 dependencies = [
+ "deadpool",
  "diesel",
  "diesel-async",
  "tokio",
